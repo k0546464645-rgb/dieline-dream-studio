@@ -98,7 +98,7 @@ function ProjectPage() {
   }, [p?.style_guide_id]);
 
   async function update(patch: Record<string, unknown>) {
-    const { error } = await supabase.from("projects").update(patch).eq("id", id);
+    const { error } = await supabase.from("projects").update(patch as never).eq("id", id);
     if (error) return toast.error(error.message);
     qc.invalidateQueries({ queryKey: ["project", id] });
   }

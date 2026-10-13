@@ -73,6 +73,6 @@ export const respondApproval = createServerFn({ method: "POST" })
     });
     const update: Record<string, string> = { status: data.status === "approved" ? "approved" : "changes_requested", updated_at: new Date().toISOString() };
     if (data.status === "approved") update["stage"] = NEXT[a.stage] ?? a.stage;
-    await supabaseAdmin.from("projects").update(update).eq("id", a.project_id);
+    await supabaseAdmin.from("projects").update(update as never).eq("id", a.project_id);
     return { ok: true };
   });
