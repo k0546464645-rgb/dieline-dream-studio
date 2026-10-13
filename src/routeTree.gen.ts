@@ -10,14 +10,39 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedStylesRouteImport } from './routes/_authenticated/styles'
 import { Route as ApiConceptRouteImport } from './routes/api/concept'
 import { Route as ApiEditImageRouteImport } from './routes/api/edit-image'
 import { Route as ApiExtractRouteImport } from './routes/api/extract'
+import { Route as ApiQcRouteImport } from './routes/api/qc'
+import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStylesRoute = AuthenticatedStylesRouteImport.update({
+  id: '/styles',
+  path: '/styles',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiConceptRoute = ApiConceptRouteImport.update({
   id: '/api/concept',
@@ -34,39 +59,98 @@ const ApiExtractRoute = ApiExtractRouteImport.update({
   path: '/api/extract',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiQcRoute = ApiQcRouteImport.update({
+  id: '/api/qc',
+  path: '/api/qc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApproveTokenRoute = ApproveTokenRouteImport.update({
+  id: '/approve/$token',
+  path: '/approve/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/styles': typeof AuthenticatedStylesRoute
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
+  '/api/qc': typeof ApiQcRoute
+  '/approve/$token': typeof ApproveTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/styles': typeof AuthenticatedStylesRoute
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
+  '/api/qc': typeof ApiQcRoute
+  '/approve/$token': typeof ApproveTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/styles': typeof AuthenticatedStylesRoute
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
+  '/api/qc': typeof ApiQcRoute
+  '/approve/$token': typeof ApproveTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/concept' | '/api/edit-image' | '/api/extract'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/styles'
+    | '/api/concept'
+    | '/api/edit-image'
+    | '/api/extract'
+    | '/api/qc'
+    | '/approve/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/concept' | '/api/edit-image' | '/api/extract'
-  id: '__root__' | '/' | '/api/concept' | '/api/edit-image' | '/api/extract'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/styles'
+    | '/api/concept'
+    | '/api/edit-image'
+    | '/api/extract'
+    | '/api/qc'
+    | '/approve/$token'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/styles'
+    | '/api/concept'
+    | '/api/edit-image'
+    | '/api/extract'
+    | '/api/qc'
+    | '/approve/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ApiConceptRoute: typeof ApiConceptRoute
   ApiEditImageRoute: typeof ApiEditImageRoute
   ApiExtractRoute: typeof ApiExtractRoute
+  ApiQcRoute: typeof ApiQcRoute
+  ApproveTokenRoute: typeof ApproveTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -77,6 +161,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/styles': {
+      id: '/_authenticated/styles'
+      path: '/styles'
+      fullPath: '/styles'
+      preLoaderRoute: typeof AuthenticatedStylesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/concept': {
       id: '/api/concept'
@@ -99,14 +211,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExtractRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/qc': {
+      id: '/api/qc'
+      path: '/api/qc'
+      fullPath: '/api/qc'
+      preLoaderRoute: typeof ApiQcRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/approve/$token': {
+      id: '/approve/$token'
+      path: '/approve/$token'
+      fullPath: '/approve/$token'
+      preLoaderRoute: typeof ApproveTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedStylesRoute: typeof AuthenticatedStylesRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedStylesRoute: AuthenticatedStylesRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   ApiConceptRoute: ApiConceptRoute,
   ApiEditImageRoute: ApiEditImageRoute,
   ApiExtractRoute: ApiExtractRoute,
+  ApiQcRoute: ApiQcRoute,
+  ApproveTokenRoute: ApproveTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
