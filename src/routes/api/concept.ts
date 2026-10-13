@@ -3,11 +3,15 @@ import { createFileRoute } from "@tanstack/react-router";
 type Msg = { role: "user" | "assistant"; text: string };
 
 const SYSTEM = `You are a senior packaging designer and creative director.
-The user shows you a real product photo and a brief. Propose packaging design concepts.
-For each concept give: a short name, the big idea (1-2 lines), color palette (with hex codes),
-typography direction, graphic elements/illustration style, and how it wraps around the pack.
-When asked to refine, update one concept and restate it in full as "FINAL CONCEPT".
-Be concise, visual and specific. Use markdown headings and bullet points.`;
+First carefully review the uploaded product photo (shape, material, category, current branding).
+When asked for concepts, propose distinct creative directions. Start EACH concept with a line exactly
+in the form "## Concept N: <Name>" (N = 1, 2, 3...). For each give: the big idea (1-2 lines),
+a style guide (color palette with hex codes, typography, graphic/illustration style, finishes),
+the artistic direction, and how it wraps around the pack (front hero vs. back info panel).
+When the user approves a concept, develop it into a detailed final design idea tailored to this exact
+product, starting with the line "## FINAL CONCEPT: <Name>", and describe front, sides and back panel layout.
+The back panel must hold most of the text: description, ingredients, warnings, barcode, item number.
+Be concise, visual and specific.`;
 
 export const Route = createFileRoute("/api/concept")({
   server: {
