@@ -53,10 +53,10 @@ function ImageSlot({
   empty,
   loading,
 }: {
-  src?: string;
-  final?: boolean;
+  src?: string | undefined;
+  final?: boolean | undefined;
   empty: string;
-  loading?: boolean;
+  loading?: boolean | undefined;
 }) {
   return (
     <div className="bg-grid flex aspect-square w-full items-center justify-center overflow-hidden rounded-md border bg-muted">
