@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiConceptRouteImport } from './routes/api/concept'
 import { Route as ApiEditImageRouteImport } from './routes/api/edit-image'
+import { Route as ApiExtractRouteImport } from './routes/api/extract'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,44 @@ const ApiEditImageRoute = ApiEditImageRouteImport.update({
   path: '/api/edit-image',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiExtractRoute = ApiExtractRouteImport.update({
+  id: '/api/extract',
+  path: '/api/extract',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
+  '/api/extract': typeof ApiExtractRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
+  '/api/extract': typeof ApiExtractRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
+  '/api/extract': typeof ApiExtractRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/concept' | '/api/edit-image'
+  fullPaths: '/' | '/api/concept' | '/api/edit-image' | '/api/extract'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/concept' | '/api/edit-image'
-  id: '__root__' | '/' | '/api/concept' | '/api/edit-image'
+  to: '/' | '/api/concept' | '/api/edit-image' | '/api/extract'
+  id: '__root__' | '/' | '/api/concept' | '/api/edit-image' | '/api/extract'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiConceptRoute: typeof ApiConceptRoute
   ApiEditImageRoute: typeof ApiEditImageRoute
+  ApiExtractRoute: typeof ApiExtractRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEditImageRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/extract': {
+      id: '/api/extract'
+      path: '/api/extract'
+      fullPath: '/api/extract'
+      preLoaderRoute: typeof ApiExtractRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiConceptRoute: ApiConceptRoute,
   ApiEditImageRoute: ApiEditImageRoute,
+  ApiExtractRoute: ApiExtractRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
