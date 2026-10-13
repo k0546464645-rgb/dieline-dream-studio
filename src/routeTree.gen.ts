@@ -19,6 +19,7 @@ import { Route as ApiEditImageRouteImport } from './routes/api/edit-image'
 import { Route as ApiExtractRouteImport } from './routes/api/extract'
 import { Route as ApiQcRouteImport } from './routes/api/qc'
 import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
+import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -69,6 +70,11 @@ const ApproveTokenRoute = ApproveTokenRouteImport.update({
   path: '/approve/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedProjectsIdRoute = AuthenticatedProjectsIdRouteImport.update({
+  id: '/projects/$id',
+  path: '/projects/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/api/extract': typeof ApiExtractRoute
   '/api/qc': typeof ApiQcRoute
   '/approve/$token': typeof ApproveTokenRoute
+  '/projects/$id': typeof AuthenticatedProjectsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -91,6 +98,7 @@ export interface FileRoutesByTo {
   '/api/extract': typeof ApiExtractRoute
   '/api/qc': typeof ApiQcRoute
   '/approve/$token': typeof ApproveTokenRoute
+  '/projects/$id': typeof AuthenticatedProjectsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -104,6 +112,7 @@ export interface FileRoutesById {
   '/api/extract': typeof ApiExtractRoute
   '/api/qc': typeof ApiQcRoute
   '/approve/$token': typeof ApproveTokenRoute
+  '/_authenticated/projects/$id': typeof AuthenticatedProjectsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -117,6 +126,7 @@ export interface FileRouteTypes {
     | '/api/extract'
     | '/api/qc'
     | '/approve/$token'
+    | '/projects/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -128,6 +138,7 @@ export interface FileRouteTypes {
     | '/api/extract'
     | '/api/qc'
     | '/approve/$token'
+    | '/projects/$id'
   id:
     | '__root__'
     | '/'
@@ -140,6 +151,7 @@ export interface FileRouteTypes {
     | '/api/extract'
     | '/api/qc'
     | '/approve/$token'
+    | '/_authenticated/projects/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -225,17 +237,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApproveTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/projects/$id': {
+      id: '/_authenticated/projects/$id'
+      path: '/projects/$id'
+      fullPath: '/projects/$id'
+      preLoaderRoute: typeof AuthenticatedProjectsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedStylesRoute: typeof AuthenticatedStylesRoute
+  AuthenticatedProjectsIdRoute: typeof AuthenticatedProjectsIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedStylesRoute: AuthenticatedStylesRoute,
+  AuthenticatedProjectsIdRoute: AuthenticatedProjectsIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
