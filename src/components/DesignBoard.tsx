@@ -14,7 +14,7 @@ export function parseConcepts(text: string): ConceptOption[] {
   return hits.map((m, i) => ({
     n: m[1]!,
     name: m[2]!.replace(/\*/g, "").trim(),
-    body: text.slice((m.index ?? 0) + m[0].length, hits[i + 1]?.index ?? text.length).trim(),
+    body: text.slice((m.index ?? 0) + m[0].length, hits[i + 1]?.index ?? text.length).replace(/\*\*|`/g, "").trim(),
   }));
 }
 

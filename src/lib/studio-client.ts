@@ -2,15 +2,25 @@ import { createParser } from "eventsource-parser";
 
 export type ChatMsg = { role: "user" | "assistant"; text: string };
 
-export async function streamConcept(
+export function streamConcept(
   messages: ChatMsg[],
   productImage: string | undefined,
   onDelta: (t: string) => void,
 ) {
-  const res = await fetch("/api/concept", {
+  return streamResponses("/api/concept", { messages, productImage }, onDelta);
+}
+
+export async function extractInfo(image: string) {
+  let out = "";
+  await streamResponses("/api/extract", { image }, (d) => (out += d));
+  return JSON.parse(out) as PackInfo & { styleNotes: string };
+}
+
+async function streamResponses(url: string, body: unknown, onDelta: (t: string) => void) {
+  const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ messages, productImage }),
+    body: JSON.stringify(body),
   });
   if (!res.ok || !res.body) {
     const t = await res.text().catch(() => "");
