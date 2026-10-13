@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireStudio } from "@/lib/require-studio.server";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
@@ -17,12 +18,25 @@ export const Route = createFileRoute("/api/concept")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const denied = await requireStudio(request);
+        if (denied) return denied;
         const apiKey = process.env["LOVABLE_API_KEY"];
         if (!apiKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
-        const { messages, productImage } = (await request.json()) as {
+        const { messages, productImage, styleGuide, learnings } = (await request.json()) as {
           messages: Msg[];
           productImage?: string;
+          styleGuide?: { text: string; images: string[] };
+          learnings?: string;
         };
+        let instructions = SYSTEM;
+        if (styleGuide?.text) {
+          instructions += `\n\nA BRAND / LICENSED STYLE GUIDE IS SELECTED for this project. Every concept must follow it strictly (characters, colors, fonts, imagery, usage rules).
+If the guide offers several sub-styles, character sets, eras or ranges and the user has not chosen one, FIRST ask which one they want (list the options briefly), and still propose 2-3 directions based on the guide.
+STYLE GUIDE:\n${styleGuide.text.slice(0, 6000)}`;
+        }
+        if (learnings) {
+          instructions += `\n\nSTUDIO LEARNINGS from past customer feedback — apply them proactively:\n${learnings.slice(0, 3000)}`;
+        }
         if (!Array.isArray(messages) || messages.length === 0) {
           return new Response("No messages", { status: 400 });
         }
@@ -32,6 +46,7 @@ export const Route = createFileRoute("/api/concept")({
           }
           const content: Record<string, unknown>[] = [{ type: "input_text", text: m.text }];
           if (i === 0 && productImage) content.push({ type: "input_image", image_url: productImage });
+          if (i === 0) styleGuide?.images?.slice(0, 4).forEach((img) => content.push({ type: "input_image", image_url: img }));
           return { role: "user", content };
         });
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/responses", {
@@ -44,7 +59,7 @@ export const Route = createFileRoute("/api/concept")({
           },
           body: JSON.stringify({
             model: "openai/gpt-6-astra",
-            instructions: SYSTEM,
+            instructions,
             input,
             stream: true,
             store: false,

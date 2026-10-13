@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { streamImage } from "@/lib/stream-image";
+import { authHeaders } from "@/lib/studio-client";
 import {
   buildLayeredSvg,
   dataUrlToFile,
@@ -316,7 +317,7 @@ export function Studio({
         setMockup(src);
         setMockupFinal(fin);
         if (fin) void saveFile("mockup", src, "3D design");
-      });
+      }, undefined, await authHeaders());
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -358,7 +359,7 @@ export function Studio({
         setArt(src);
         setArtFinal(fin);
         if (fin) void saveFile("artwork", src, extra ? "Artwork (revised)" : "Artwork");
-      });
+      }, undefined, await authHeaders());
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

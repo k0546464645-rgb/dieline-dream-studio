@@ -26,7 +26,7 @@ export async function extractInfo(image: string) {
   return JSON.parse(out) as PackInfo & { styleNotes: string };
 }
 
-async function authHeaders(): Promise<Record<string, string>> {
+export async function authHeaders(): Promise<Record<string, string>> {
   const { supabase } = await import("@/integrations/supabase/client");
   const { data } = await supabase.auth.getSession();
   return data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {};
