@@ -26,6 +26,7 @@ type Mark = { item: number; x: number; y: number; note: string };
 
 function ApprovePage() {
   const a = Route.useLoaderData();
+  const { token } = Route.useParams();
   const [chosen, setChosen] = useState<string | null>(a?.items.length === 1 ? a.items[0]!.label : null);
   const [marks, setMarks] = useState<Mark[]>([]);
   const [comment, setComment] = useState("");
@@ -43,7 +44,7 @@ function ApprovePage() {
     if (status !== "approved" && !comment.trim() && marks.length === 0) return toast.error("Please describe the changes or add marks");
     setBusy(true);
     try {
-      await respondApproval({ data: { token: Route.useParams.toString() && tokenFromUrl(), status, chosen, comment, name, marks } });
+      await respondApproval({ data: { token, status, chosen, comment, name, marks } });
       setDone(status);
     } catch (e) {
       toast.error((e as Error).message);
@@ -144,6 +145,3 @@ function ApprovePage() {
   );
 }
 
-function tokenFromUrl() {
-  return window.location.pathname.split("/").pop() ?? "";
-}
