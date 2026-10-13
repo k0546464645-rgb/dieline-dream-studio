@@ -174,7 +174,7 @@ function Studio() {
   }
 
   async function renderMockup(conceptText?: string) {
-    const concept = conceptText ?? approved ?? lastAssistant;
+    const concept = conceptText || approved || lastAssistant;
     if (!productFile || !concept) {
       toast.error("Upload a product and create a concept first");
       return;

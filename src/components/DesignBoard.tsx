@@ -18,7 +18,7 @@ export function parseConcepts(text: string): ConceptOption[] {
   }));
 }
 
-function Preview({ src, final, busy }: { src?: string | undefined; final?: boolean; busy?: boolean }) {
+function Preview({ src, final, busy }: { src?: string | undefined; final?: boolean | undefined; busy?: boolean | undefined }) {
   return (
     <div className="bg-grid flex aspect-square w-full items-center justify-center overflow-hidden rounded-md border bg-muted">
       {src ? (
