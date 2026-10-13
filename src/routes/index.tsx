@@ -12,7 +12,9 @@ import {
   fileToDataUrl,
   streamConcept,
   type ChatMsg,
+  type PackInfo,
 } from "@/lib/studio-client";
+import { InfoForm, emptyInfo, infoPrompt } from "@/components/InfoForm";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -93,8 +95,14 @@ function Studio() {
   const [artBusy, setArtBusy] = useState(false);
   const [svgBusy, setSvgBusy] = useState(false);
 
+  const [approved, setApproved] = useState<string>("");
+  const [info, setInfo] = useState<PackInfo>(emptyInfo);
   const chatEnd = useRef<HTMLDivElement>(null);
-  const concept = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
+  const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
+  const concept = approved || lastAssistant;
+  const options = thinking || approved
+    ? []
+    : [...lastAssistant.matchAll(/^#{1,3}\s*Concept\s*(\d+)\s*[:\-–—]\s*(.+)$/gim)].map((m) => ({ n: m[1]!, name: m[2]!.replace(/\*/g, "").trim() }));
 
   async function onProduct(f?: File) {
     if (!f) return;
@@ -102,8 +110,9 @@ function Studio() {
     setProduct(await fileToDataUrl(f));
   }
 
-  async function send() {
+  async function send(override?: string, approve = false) {
     const text =
+      override ||
       draft.trim() ||
       (messages.length === 0 ? "Propose 3 packaging design concepts for this product." : "");
     if (!text || thinking) return;
@@ -115,8 +124,10 @@ function Studio() {
     setMessages([...next, { role: "assistant", text: "" }]);
     setDraft("");
     setThinking(true);
+    let full = "";
     try {
       await streamConcept(next, product, (d) => {
+        full += d;
         setMessages((m) => {
           const c = [...m];
           c[c.length - 1] = { role: "assistant", text: (c[c.length - 1]?.text ?? "") + d };
@@ -124,6 +135,10 @@ function Studio() {
         });
         chatEnd.current?.scrollIntoView({ block: "end" });
       });
+      if (approve) {
+        setApproved(full);
+        toast.success("Concept approved — fill in the product info next");
+      }
     } catch (e) {
       setMessages(next.slice(0, -1));
       setDraft(text);
@@ -182,7 +197,7 @@ function Studio() {
     const form = new FormData();
     form.append(
       "prompt",
-      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nCONCEPT:\n${concept.slice(0, 3000)}`,
+      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (description, ingredients, warnings, item number) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
     form.append("image[]", await dataUrlToFile(dieline, "dieline.png"));
     if (mockup && mockupFinal) form.append("image[]", await dataUrlToFile(mockup, "mockup.png"));
@@ -202,7 +217,7 @@ function Studio() {
     if (!art || !dieline) return;
     setSvgBusy(true);
     try {
-      const svg = await buildLayeredSvg(art, dieline, dielineName || "artwork");
+      const svg = await buildLayeredSvg(art, dieline, dielineName || "artwork", info);
       const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
       download(url, `${dielineName || "dieline"}-artwork.svg`);
       setTimeout(() => URL.revokeObjectURL(url), 5000);
@@ -272,6 +287,36 @@ function Studio() {
                     {m.text || <span className="font-mono text-xs text-muted-foreground">thinking…</span>}
                   </div>
                 ))}
+                {options.length > 0 && (
+                  <div className="rounded-lg border border-accent bg-background p-3">
+                    <p className="mb-2 font-mono text-xs text-accent">STEP 2 · APPROVE A CONCEPT</p>
+                    <div className="flex flex-wrap gap-2">
+                      {options.map((o) => (
+                        <Button
+                          key={o.n}
+                          size="sm"
+                          variant="cut"
+                          onClick={() =>
+                            send(
+                              `I approve Concept ${o.n}: ${o.name}. Develop it into the FINAL CONCEPT tailored to this exact product, with front, sides and back panel layout.`,
+                              true,
+                            )
+                          }
+                        >
+                          Approve {o.n}: {o.name}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {approved && !thinking && (
+                  <div className="flex items-center justify-between gap-2 rounded-lg border border-accent bg-background px-3 py-2">
+                    <span className="font-mono text-xs text-accent">✓ FINAL CONCEPT APPROVED</span>
+                    <Button size="sm" variant="ghost" onClick={() => setApproved("")}>
+                      Change
+                    </Button>
+                  </div>
+                )}
                 <div ref={chatEnd} />
               </div>
               <div className="mt-3 flex gap-2">
@@ -287,16 +332,20 @@ function Studio() {
                   placeholder="Brand name, audience, mood, must-have info…"
                   className="min-h-[52px] resize-none bg-background"
                 />
-                <Button onClick={send} disabled={thinking} className="h-auto self-stretch">
+                <Button onClick={() => send()} disabled={thinking} className="h-auto self-stretch">
                   {thinking ? "…" : "Send"}
                 </Button>
               </div>
             </div>
           </Step>
+
+          <Step n="03" title="Product information">
+            <InfoForm value={info} onChange={setInfo} />
+          </Step>
         </div>
 
         <div className="flex flex-col gap-6">
-          <Step n="03" title="3D mockup">
+          <Step n="04" title="3D mockup">
             <ImageSlot
               src={mockup}
               final={mockupFinal}
@@ -315,7 +364,7 @@ function Studio() {
             </div>
           </Step>
 
-          <Step n="04" title="Artwork on your dieline">
+          <Step n="05" title="Artwork on your dieline">
             <div className="grid grid-cols-2 gap-3">
               <label className="cursor-pointer">
                 <div className="bg-grid dash-cut flex aspect-square items-center justify-center overflow-hidden rounded-md bg-muted">
@@ -354,7 +403,7 @@ function Studio() {
               )}
             </div>
             <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
-              The SVG has two layers — Artwork and Dieline (multiply) — sized to your dieline. Open it in
+              The SVG has layers for Artwork, Dieline (multiply), a real vector EAN-13 barcode and a hidden Editable Text layer with your info. Open it in
               Illustrator with File › Open.
             </p>
           </Step>

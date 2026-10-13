@@ -103,19 +103,57 @@ export async function dielineToPng(file: File): Promise<string> {
   return canvas.toDataURL("image/png");
 }
 
-/** Builds a layered SVG (Artwork + Dieline layers) that opens in Illustrator. */
-export async function buildLayeredSvg(artwork: string, dieline: string, title: string) {
+export type PackInfo = {
+  language: string;
+  barcode: string;
+  itemNumber: string;
+  productName: string;
+  description: string;
+  ingredients: string;
+  warnings: string;
+  extra: string;
+};
+
+const xmlEsc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** Builds a layered SVG (Artwork, Dieline, editable Text and vector Barcode) for Illustrator. */
+export async function buildLayeredSvg(artwork: string, dieline: string, title: string, info?: PackInfo) {
   const { w, h } = await imageSize(dieline);
-  const esc = (s: string) => s.replace(/[<&>"]/g, "");
+  const { ean13Svg } = await import("./ean13");
+  const rtl = info?.language === "Hebrew" || info?.language === "Arabic";
+  const fs = Math.max(10, Math.round(w / 140));
+  const lines = info
+    ? [
+        ["Product", info.productName],
+        ["Description", info.description],
+        ["Ingredients", info.ingredients],
+        ["Warnings", info.warnings],
+        ["Item no.", info.itemNumber],
+        ["Other", info.extra],
+      ].filter(([, v]) => v?.trim())
+    : [];
+  let y = fs * 2;
+  const textEls = lines
+    .flatMap(([k, v]) =>
+      `${k}: ${v}`.split("\n").map((ln) => {
+        const el = `<text x="${rtl ? w - fs * 2 : fs * 2}" y="${y}" font-size="${fs}" font-family="Arial, sans-serif" ${rtl ? 'direction="rtl" text-anchor="end"' : ""}>${xmlEsc(ln)}</text>`;
+        y += fs * 1.4;
+        return el;
+      }),
+    )
+    .join("\n    ");
+  const module = Math.max(2, Math.round(w / 500));
+  const barcode = info?.barcode ? ean13Svg(info.barcode, w - module * 115 - fs * 2, h - module * 45 - fs * 2, module) : null;
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${w}px" height="${h}px" viewBox="0 0 ${w} ${h}">
-  <title>${esc(title)}</title>
+  <title>${xmlEsc(title)}</title>
   <g id="Artwork" data-name="Artwork">
     <image width="${w}" height="${h}" preserveAspectRatio="none" xlink:href="${artwork}"/>
   </g>
   <g id="Dieline" data-name="Dieline" style="mix-blend-mode:multiply">
     <image width="${w}" height="${h}" preserveAspectRatio="none" xlink:href="${dieline}"/>
-  </g>
+  </g>${textEls ? `\n  <g id="Editable_Text" data-name="Editable Text" display="none">\n    ${textEls}\n  </g>` : ""}${barcode ? `\n  ${barcode}` : ""}
 </svg>`;
 }
 
