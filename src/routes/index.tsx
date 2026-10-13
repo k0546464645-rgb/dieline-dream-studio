@@ -8,6 +8,7 @@ import {
   buildLayeredSvg,
   dataUrlToFile,
   dielineToPng,
+  extractInfo,
   download,
   fileToDataUrl,
   streamConcept,
@@ -15,7 +16,7 @@ import {
   type PackInfo,
 } from "@/lib/studio-client";
 import { DesignBoard, parseConcepts, type ConceptOption } from "@/components/DesignBoard";
-import { InfoForm, emptyInfo, infoPrompt } from "@/components/InfoForm";
+import { InfoForm, LANGUAGES, emptyInfo, infoPrompt } from "@/components/InfoForm";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -106,6 +107,29 @@ function Studio() {
   const [readyConcept, setReadyConcept] = useState("");
   const [refFile, setRefFile] = useState<File>();
   const [boardOpen, setBoardOpen] = useState(false);
+  const [styleNotes, setStyleNotes] = useState("");
+  const [reading, setReading] = useState(false);
+
+  async function readFile(png: string) {
+    setReading(true);
+    try {
+      const { styleNotes: notes, ...found } = await extractInfo(png);
+      setInfo((cur) => {
+        const next = { ...cur };
+        (Object.keys(found) as (keyof PackInfo)[]).forEach((k) => {
+          const v = found[k]?.trim();
+          if (v && !(k === "language" && !LANGUAGES.includes(v))) next[k] = v;
+        });
+        return next;
+      });
+      setStyleNotes(notes ?? "");
+      toast.success("Info and style read from your file — check the Product information form");
+    } catch (e) {
+      toast.error(`Couldn't read the file: ${(e as Error).message}`);
+    } finally {
+      setReading(false);
+    }
+  }
 
   function choose(o: ConceptOption) {
     send(
@@ -185,7 +209,7 @@ function Studio() {
     const form = new FormData();
     form.append(
       "prompt",
-      `Photorealistic 3D studio product render of THIS exact product (keep its real shape, proportions, material and structure) with new packaging graphics applied according to this design concept. Three-quarter view, soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
+      `Photorealistic 3D studio product render of THIS exact product (keep its real shape, proportions, material and structure) with new packaging graphics applied according to this design concept. Three-quarter view, soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.${styleNotes ? `\n\nEXISTING BRAND STYLE (logo, fonts, imagery to reuse):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
     );
     form.append("image[]", productFile);
     if (refFile) form.append("image[]", refFile);
@@ -206,6 +230,7 @@ function Studio() {
     try {
       const png = await dielineToPng(f);
       setDieline(png);
+      void readFile(png);
       setDielineName(f.name.replace(/\.[^.]+$/, ""));
       setArt(undefined);
     } catch (e) {
@@ -224,7 +249,7 @@ function Studio() {
     const form = new FormData();
     form.append(
       "prompt",
-      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (description, ingredients, warnings, item number) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (description, ingredients, warnings, item number) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
     form.append("image[]", await dataUrlToFile(dieline, "dieline.png"));
     if (mockup && mockupFinal) form.append("image[]", await dataUrlToFile(mockup, "mockup.png"));
@@ -472,6 +497,27 @@ function Studio() {
                 </>
               )}
             </div>
+            {(reading || styleNotes) && (
+              <div className="mt-4 rounded-md border bg-background p-3">
+                <div className="mb-1 flex items-center justify-between">
+                  <p className="font-mono text-[11px] uppercase tracking-wider text-accent">
+                    {reading ? "Reading text, barcode and style from your file…" : "Style found in your file"}
+                  </p>
+                  {!reading && dieline && (
+                    <Button size="sm" variant="ghost" onClick={() => readFile(dieline)}>
+                      Read again
+                    </Button>
+                  )}
+                </div>
+                {styleNotes && (
+                  <Textarea
+                    value={styleNotes}
+                    onChange={(e) => setStyleNotes(e.target.value)}
+                    className="min-h-24 bg-card text-xs"
+                  />
+                )}
+              </div>
+            )}
             <p className="mt-3 font-mono text-[11px] leading-relaxed text-muted-foreground">
               The SVG has layers for Artwork, Dieline (multiply), a real vector EAN-13 barcode and a hidden Editable Text layer with your info. Open it in
               Illustrator with File › Open.
