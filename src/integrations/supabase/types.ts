@@ -14,16 +14,299 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity: {
+        Row: {
+          actor: string
+          created_at: string
+          id: string
+          kind: string
+          message: string
+          project_id: string
+        }
+        Insert: {
+          actor?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          message: string
+          project_id: string
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          message?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approvals: {
+        Row: {
+          applied: boolean
+          chosen: string | null
+          comment: string
+          created_at: string
+          created_by: string | null
+          id: string
+          items: Json
+          marks: Json
+          message: string
+          project_id: string
+          recipient_name: string
+          recipient_role: string
+          responded_at: string | null
+          responder_name: string
+          stage: string
+          status: string
+          token: string
+        }
+        Insert: {
+          applied?: boolean
+          chosen?: string | null
+          comment?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          items?: Json
+          marks?: Json
+          message?: string
+          project_id: string
+          recipient_name?: string
+          recipient_role?: string
+          responded_at?: string | null
+          responder_name?: string
+          stage: string
+          status?: string
+          token?: string
+        }
+        Update: {
+          applied?: boolean
+          chosen?: string | null
+          comment?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          items?: Json
+          marks?: Json
+          message?: string
+          project_id?: string
+          recipient_name?: string
+          recipient_role?: string
+          responded_at?: string | null
+          responder_name?: string
+          stage?: string
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approvals_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_files: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          label: string
+          path: string
+          project_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind: string
+          label?: string
+          path: string
+          project_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          label?: string
+          path?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          approved_concept: string
+          created_at: string
+          created_by: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          id: string
+          info: Json
+          messages: Json
+          name: string
+          product_path: string | null
+          stage: string
+          status: string
+          style_guide_id: string | null
+          style_notes: string
+          supplier: string
+          supplier_item: string
+          updated_at: string
+        }
+        Insert: {
+          approved_concept?: string
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          info?: Json
+          messages?: Json
+          name: string
+          product_path?: string | null
+          stage?: string
+          status?: string
+          style_guide_id?: string | null
+          style_notes?: string
+          supplier?: string
+          supplier_item?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_concept?: string
+          created_at?: string
+          created_by?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          id?: string
+          info?: Json
+          messages?: Json
+          name?: string
+          product_path?: string | null
+          stage?: string
+          status?: string
+          style_guide_id?: string | null
+          style_notes?: string
+          supplier?: string
+          supplier_item?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_style_guide_id_fkey"
+            columns: ["style_guide_id"]
+            isOneToOne: false
+            referencedRelation: "style_guides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      style_guides: {
+        Row: {
+          brand: string
+          colors: string
+          created_at: string
+          created_by: string | null
+          directions: string
+          fonts: string
+          id: string
+          image_paths: string[]
+          imagery: string
+          kind: string
+          name: string
+          notes: string
+          updated_at: string
+        }
+        Insert: {
+          brand?: string
+          colors?: string
+          created_at?: string
+          created_by?: string | null
+          directions?: string
+          fonts?: string
+          id?: string
+          image_paths?: string[]
+          imagery?: string
+          kind?: string
+          name: string
+          notes?: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          colors?: string
+          created_at?: string
+          created_by?: string | null
+          directions?: string
+          fonts?: string
+          id?: string
+          image_paths?: string[]
+          imagery?: string
+          kind?: string
+          name?: string
+          notes?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "studio"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +433,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["studio"],
+    },
   },
 } as const
