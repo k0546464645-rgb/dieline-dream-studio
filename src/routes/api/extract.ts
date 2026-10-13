@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireStudio } from "@/lib/require-studio.server";
 
 const str = { type: "string" };
 const SCHEMA = {
@@ -22,6 +23,8 @@ export const Route = createFileRoute("/api/extract")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const denied = await requireStudio(request);
+        if (denied) return denied;
         const apiKey = process.env["LOVABLE_API_KEY"];
         if (!apiKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
         const { image } = (await request.json()) as { image?: string };

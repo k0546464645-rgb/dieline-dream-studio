@@ -2,12 +2,22 @@ import { createParser } from "eventsource-parser";
 
 export type ChatMsg = { role: "user" | "assistant"; text: string };
 
+export type ConceptContext = {
+  styleGuide?: { text: string; images: string[] } | undefined;
+  learnings?: string | undefined;
+};
+
 export function streamConcept(
   messages: ChatMsg[],
   productImage: string | undefined,
+  ctx: ConceptContext,
   onDelta: (t: string) => void,
 ) {
-  return streamResponses("/api/concept", { messages, productImage }, onDelta);
+  return streamResponses("/api/concept", { messages, productImage, ...ctx }, onDelta);
+}
+
+export function streamQc(artwork: string, info: PackInfo, concept: string, onDelta: (t: string) => void) {
+  return streamResponses("/api/qc", { artwork, info, concept }, onDelta);
 }
 
 export async function extractInfo(image: string) {
@@ -16,10 +26,16 @@ export async function extractInfo(image: string) {
   return JSON.parse(out) as PackInfo & { styleNotes: string };
 }
 
+export async function authHeaders(): Promise<Record<string, string>> {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data } = await supabase.auth.getSession();
+  return data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {};
+}
+
 async function streamResponses(url: string, body: unknown, onDelta: (t: string) => void) {
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await authHeaders()) },
     body: JSON.stringify(body),
   });
   if (!res.ok || !res.body) {

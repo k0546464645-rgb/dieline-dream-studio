@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { streamImage } from "@/lib/stream-image";
+import { authHeaders } from "@/lib/studio-client";
 import { download } from "@/lib/studio-client";
 
 export type ConceptOption = { n: string; name: string; body: string };
@@ -49,6 +50,7 @@ export function DesignBoard({
   onChoose,
   onRender,
   onRefine,
+  onPreview,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
@@ -62,6 +64,7 @@ export function DesignBoard({
   onChoose: (o: ConceptOption) => void;
   onRender: () => void;
   onRefine: (text: string) => void;
+  onPreview?: (o: ConceptOption, src: string) => void;
 }) {
   const [previews, setPreviews] = useState<Record<string, { src: string; final: boolean }>>({});
   const [busy, setBusy] = useState<Record<string, boolean>>({});
@@ -77,9 +80,10 @@ export function DesignBoard({
     );
     form.append("image[]", productFile);
     try {
-      await streamImage("/api/edit-image", form, (src, final) =>
-        setPreviews((p) => ({ ...p, [o.n]: { src, final } })),
-      );
+      await streamImage("/api/edit-image", form, (src, final) => {
+        setPreviews((p) => ({ ...p, [o.n]: { src, final } }));
+        if (final) onPreview?.(o, src);
+      }, undefined, await authHeaders());
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
