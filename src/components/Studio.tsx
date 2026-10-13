@@ -132,6 +132,7 @@ export function Studio({
       return path;
     } catch (e) {
       toast.error(`Couldn't save ${kind}: ${(e as Error).message}`);
+      return undefined;
     }
   }
 
@@ -164,7 +165,7 @@ export function Studio({
 
   // Autosave chat, concept, info and style notes
   useEffect(() => {
-    if (thinking) return;
+    if (thinking) return undefined;
     const t = setTimeout(() => {
       void supabase
         .from("projects")
