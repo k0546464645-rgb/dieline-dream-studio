@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-type FileRow = { id: string; kind: string; label: string; path: string; url?: string };
+type FileRow = { id: string; kind: string; label: string; path: string; url?: string | undefined };
 type Project = { id: string; name: string; stage: string; customer_name: string; customer_email: string; customer_phone: string; messages: unknown; approved_concept: string };
 
 export function approvalLink(token: string) {
