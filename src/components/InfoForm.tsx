@@ -1,0 +1,97 @@
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { ean13Check } from "@/lib/ean13";
+import type { PackInfo } from "@/lib/studio-client";
+
+export const LANGUAGES = ["Hebrew", "English", "Arabic", "Russian", "French", "Spanish", "German"];
+const RTL = new Set(["Hebrew", "Arabic"]);
+
+export const emptyInfo: PackInfo = {
+  language: "Hebrew",
+  barcode: "",
+  itemNumber: "",
+  productName: "",
+  description: "",
+  ingredients: "",
+  warnings: "",
+  extra: "",
+};
+
+export function infoPrompt(i: PackInfo) {
+  const parts = [
+    `ALL packaging text must be written in ${i.language}${RTL.has(i.language) ? " (right-to-left script, rendered correctly)" : ""}. Reproduce the provided text exactly, do not invent wording.`,
+    i.productName && `Product name: ${i.productName}`,
+    i.description && `Back panel – product description: ${i.description}`,
+    i.ingredients && `Back panel – ingredients list (small, legible, boxed): ${i.ingredients}`,
+    i.warnings && `Back panel – safety & warnings (with a warning heading): ${i.warnings}`,
+    i.itemNumber && `Back panel – item number: ${i.itemNumber}`,
+    i.extra && `Other info (side or back): ${i.extra}`,
+    i.barcode && `Leave an empty white rectangle on the back panel bottom for the barcode ${i.barcode}; do not draw bars.`,
+  ];
+  return parts.filter(Boolean).join("\n");
+}
+
+function barcodeStatus(raw: string) {
+  const d = raw.replace(/\D/g, "");
+  if (!d) return null;
+  if (d.length === 12) return `Check digit will be added: ${d}${ean13Check(d)}`;
+  if (d.length === 13) return ean13Check(d.slice(0, 12)) === d[12] ? "✓ Valid EAN-13" : "✗ Check digit is wrong";
+  return "EAN-13 needs 12 or 13 digits";
+}
+
+export function InfoForm({ value, onChange }: { value: PackInfo; onChange: (v: PackInfo) => void }) {
+  const dir = RTL.has(value.language) ? "rtl" : "ltr";
+  const set = (k: keyof PackInfo) => (e: { target: { value: string } }) => onChange({ ...value, [k]: e.target.value });
+  const status = barcodeStatus(value.barcode);
+  return (
+    <div className="space-y-4">
+      <div className="space-y-1.5">
+        <Label>Packaging language</Label>
+        <select
+          value={value.language}
+          onChange={set("language")}
+          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+        >
+          {LANGUAGES.map((l) => (
+            <option key={l}>{l}</option>
+          ))}
+        </select>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label>Barcode (EAN-13)</Label>
+          <Input value={value.barcode} onChange={set("barcode")} inputMode="numeric" className="bg-background font-mono" />
+          {status && <p className="font-mono text-[11px] text-muted-foreground">{status}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label>Item number</Label>
+          <Input value={value.itemNumber} onChange={set("itemNumber")} className="bg-background font-mono" />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Product name</Label>
+        <Input dir={dir} value={value.productName} onChange={set("productName")} className="bg-background" />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Product description</Label>
+        <Textarea dir={dir} value={value.description} onChange={set("description")} className="min-h-20 bg-background" />
+      </div>
+      <div className="dash-cut space-y-4 rounded-md p-3">
+        <p className="font-mono text-[11px] uppercase tracking-wider text-accent">Back panel · ingredients & warnings</p>
+        <div className="space-y-1.5">
+          <Label>Ingredients</Label>
+          <Textarea dir={dir} value={value.ingredients} onChange={set("ingredients")} className="min-h-20 bg-background" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Safety & warnings</Label>
+          <Textarea dir={dir} value={value.warnings} onChange={set("warnings")} className="min-h-20 bg-background" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Other (manufacturer, storage, net weight…)</Label>
+          <Textarea dir={dir} value={value.extra} onChange={set("extra")} className="min-h-16 bg-background" />
+        </div>
+      </div>
+    </div>
+  );
+}
