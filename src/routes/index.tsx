@@ -14,6 +14,7 @@ import {
   type ChatMsg,
   type PackInfo,
 } from "@/lib/studio-client";
+import { DesignBoard, parseConcepts, type ConceptOption } from "@/components/DesignBoard";
 import { InfoForm, emptyInfo, infoPrompt } from "@/components/InfoForm";
 
 export const Route = createFileRoute("/")({
@@ -100,9 +101,30 @@ function Studio() {
   const chatEnd = useRef<HTMLDivElement>(null);
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
   const concept = approved || lastAssistant;
-  const options = thinking || approved
-    ? []
-    : [...lastAssistant.matchAll(/^#{1,3}\s*Concept\s*(\d+)\s*[:\-–—]\s*(.+)$/gim)].map((m) => ({ n: m[1]!, name: m[2]!.replace(/\*/g, "").trim() }));
+  const options = approved ? [] : parseConcepts(lastAssistant);
+  const [task, setTask] = useState<"concept" | "ready" | null>(null);
+  const [readyConcept, setReadyConcept] = useState("");
+  const [refFile, setRefFile] = useState<File>();
+  const [boardOpen, setBoardOpen] = useState(false);
+
+  function choose(o: ConceptOption) {
+    send(
+      `I approve Concept ${o.n}: ${o.name}. Develop it into the FINAL CONCEPT tailored to this exact product, with front, sides and back panel layout.`,
+      true,
+    );
+  }
+
+  function designFromReady() {
+    if (!readyConcept.trim() && !refFile) {
+      toast.error("Paste your approved concept or upload a reference");
+      return;
+    }
+    setBoardOpen(true);
+    send(
+      `This is my READY, ALREADY APPROVED concept — do not propose alternatives. Develop it into the FINAL CONCEPT tailored to this exact product, with front, sides and back panel layout.${refFile ? " A reference design image will also be used for the render." : ""}\n\nAPPROVED CONCEPT:\n${readyConcept.trim() || "(see reference image)"}`,
+      true,
+    );
+  }
 
   async function onProduct(f?: File) {
     if (!f) return;
@@ -137,7 +159,10 @@ function Studio() {
       });
       if (approve) {
         setApproved(full);
-        toast.success("Concept approved — fill in the product info next");
+        setBoardOpen(true);
+        void renderMockup(full);
+      } else if (parseConcepts(full).length > 0) {
+        setBoardOpen(true);
       }
     } catch (e) {
       setMessages(next.slice(0, -1));
@@ -148,7 +173,8 @@ function Studio() {
     }
   }
 
-  async function renderMockup() {
+  async function renderMockup(conceptText?: string) {
+    const concept = conceptText ?? approved ?? lastAssistant;
     if (!productFile || !concept) {
       toast.error("Upload a product and create a concept first");
       return;
@@ -162,6 +188,7 @@ function Studio() {
       `Photorealistic 3D studio product render of THIS exact product (keep its real shape, proportions, material and structure) with new packaging graphics applied according to this design concept. Three-quarter view, soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
     );
     form.append("image[]", productFile);
+    if (refFile) form.append("image[]", refFile);
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setMockup(src);
@@ -242,6 +269,22 @@ function Studio() {
         </div>
       </header>
 
+      <DesignBoard
+        open={boardOpen}
+        onOpenChange={setBoardOpen}
+        productFile={productFile}
+        options={options}
+        approved={approved}
+        thinking={thinking}
+        mockup={mockup}
+        mockupFinal={mockupFinal}
+        mockBusy={mockBusy}
+        onChoose={choose}
+        onRender={() => renderMockup()}
+        onRefine={(t) =>
+          send(`${t}\n\nRestate the full updated design starting with "## FINAL CONCEPT".`, true)
+        }
+      />
       <main className="mx-auto grid max-w-7xl gap-6 px-6 py-8 lg:grid-cols-[1.05fr_1fr]">
         <div className="flex flex-col gap-6">
           <Step n="01" title="Your product">
@@ -264,6 +307,50 @@ function Studio() {
                 onChange={(e) => onProduct(e.target.files?.[0])}
               />
             </label>
+            {product && (
+              <div className="mt-5">
+                <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Choose a task</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {(
+                    [
+                      ["concept", "Create a concept", "Get several creative directions, style guides and visuals to choose from."],
+                      ["ready", "Design from approved concept", "Already have a concept? Paste it and go straight to the design."],
+                    ] as const
+                  ).map(([k, t, d]) => (
+                    <button
+                      key={k}
+                      onClick={() => {
+                        setTask(k);
+                        if (k === "concept" && messages.length === 0) send();
+                      }}
+                      className={`rounded-md border p-4 text-left transition-colors ${task === k ? "border-accent bg-background ring-1 ring-accent" : "bg-background hover:border-foreground"}`}
+                    >
+                      <p className="font-semibold">{t}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{d}</p>
+                    </button>
+                  ))}
+                </div>
+                {task === "ready" && !approved && (
+                  <div className="mt-4 space-y-3">
+                    <Textarea
+                      value={readyConcept}
+                      onChange={(e) => setReadyConcept(e.target.value)}
+                      placeholder="Paste the approved concept: style, colors, fonts, graphics, messaging…"
+                      className="min-h-32 bg-background"
+                    />
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className="cursor-pointer rounded-md border border-dashed px-3 py-2 text-sm text-muted-foreground hover:border-foreground">
+                        {refFile ? `Reference: ${refFile.name}` : "+ Reference design image (optional)"}
+                        <input type="file" accept="image/*" className="hidden" onChange={(e) => setRefFile(e.target.files?.[0])} />
+                      </label>
+                      <Button variant="cut" onClick={designFromReady} disabled={thinking}>
+                        Design the product
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </Step>
 
           <Step n="02" title="Design concept">
@@ -287,27 +374,10 @@ function Studio() {
                     {m.text || <span className="font-mono text-xs text-muted-foreground">thinking…</span>}
                   </div>
                 ))}
-                {options.length > 0 && (
-                  <div className="rounded-lg border border-accent bg-background p-3">
-                    <p className="mb-2 font-mono text-xs text-accent">STEP 2 · APPROVE A CONCEPT</p>
-                    <div className="flex flex-wrap gap-2">
-                      {options.map((o) => (
-                        <Button
-                          key={o.n}
-                          size="sm"
-                          variant="cut"
-                          onClick={() =>
-                            send(
-                              `I approve Concept ${o.n}: ${o.name}. Develop it into the FINAL CONCEPT tailored to this exact product, with front, sides and back panel layout.`,
-                              true,
-                            )
-                          }
-                        >
-                          Approve {o.n}: {o.name}
-                        </Button>
-                      ))}
-                    </div>
-                  </div>
+                {(options.length > 0 || approved) && !thinking && (
+                  <Button variant="cut" className="w-full" onClick={() => setBoardOpen(true)}>
+                    {approved ? "View design on the board" : `Open design board · ${options.length} directions`}
+                  </Button>
                 )}
                 {approved && !thinking && (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-accent bg-background px-3 py-2">
@@ -353,7 +423,7 @@ function Studio() {
               empty="Your product rendered with the new concept appears here."
             />
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="cut" onClick={renderMockup} disabled={mockBusy || !concept || !productFile}>
+              <Button variant="cut" onClick={() => renderMockup()} disabled={mockBusy || !concept || !productFile}>
                 {mockBusy ? "Rendering…" : mockup ? "Re-render mockup" : "Render 3D mockup"}
               </Button>
               {mockup && mockupFinal && (
