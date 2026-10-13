@@ -119,7 +119,7 @@ function Studio() {
       await streamConcept(next, product, (d) => {
         setMessages((m) => {
           const c = [...m];
-          c[c.length - 1] = { role: "assistant", text: c[c.length - 1].text + d };
+          c[c.length - 1] = { role: "assistant", text: (c[c.length - 1]?.text ?? "") + d };
           return c;
         });
         chatEnd.current?.scrollIntoView({ block: "end" });
@@ -134,7 +134,10 @@ function Studio() {
   }
 
   async function renderMockup() {
-    if (!productFile || !concept) return toast.error("Upload a product and create a concept first");
+    if (!productFile || !concept) {
+      toast.error("Upload a product and create a concept first");
+      return;
+    }
     setMockBusy(true);
     setMockup(undefined);
     setMockupFinal(false);
@@ -169,7 +172,10 @@ function Studio() {
   }
 
   async function renderArtwork() {
-    if (!dieline || !concept) return toast.error("Upload a dieline and create a concept first");
+    if (!dieline || !concept) {
+      toast.error("Upload a dieline and create a concept first");
+      return;
+    }
     setArtBusy(true);
     setArt(undefined);
     setArtFinal(false);
