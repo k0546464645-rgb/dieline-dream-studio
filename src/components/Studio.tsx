@@ -1,5 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { logActivity, pathToFile, signedUrl, uploadToStudio } from "@/lib/storage";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,32 +13,13 @@ import {
   download,
   fileToDataUrl,
   streamConcept,
+  streamQc,
   type ChatMsg,
   type PackInfo,
 } from "@/lib/studio-client";
 import { DesignBoard, parseConcepts, type ConceptOption } from "@/components/DesignBoard";
 import { InfoForm, LANGUAGES, emptyInfo, infoPrompt } from "@/components/InfoForm";
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Dieline Studio — AI packaging concepts, 3D mockups & print-ready artwork" },
-      {
-        name: "description",
-        content:
-          "Upload your product, develop a packaging concept in chat, preview it as a 3D mockup and place the artwork on your own dieline for Illustrator.",
-      },
-      { property: "og:title", content: "Dieline Studio" },
-      {
-        property: "og:description",
-        content: "From product photo to concept, 3D mockup and dieline artwork ready for Illustrator.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: Studio,
-});
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
@@ -79,10 +61,39 @@ function ImageSlot({
   );
 }
 
-function Studio() {
+export type StudioProject = {
+  id: string;
+  name: string;
+  messages: unknown;
+  approved_concept: string;
+  info: unknown;
+  style_notes: string;
+  product_path: string | null;
+};
+export type StudioInstruction = { id: string; text: string; target: "concept" | "artwork" } | null;
+
+async function urlToDataUrl(url: string) {
+  return fileToDataUrl(await (await fetch(url)).blob());
+}
+
+export function Studio({
+  project,
+  styleGuide,
+  learnings,
+  instruction,
+  onInstructionDone,
+  onFilesChanged,
+}: {
+  project: StudioProject;
+  styleGuide?: { text: string; images: string[] } | undefined;
+  learnings?: string | undefined;
+  instruction?: StudioInstruction;
+  onInstructionDone?: () => void;
+  onFilesChanged?: () => void;
+}) {
   const [product, setProduct] = useState<string>();
   const [productFile, setProductFile] = useState<File>();
-  const [messages, setMessages] = useState<ChatMsg[]>([]);
+  const [messages, setMessages] = useState<ChatMsg[]>(Array.isArray(project.messages) ? (project.messages as ChatMsg[]) : []);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
 
@@ -97,8 +108,8 @@ function Studio() {
   const [artBusy, setArtBusy] = useState(false);
   const [svgBusy, setSvgBusy] = useState(false);
 
-  const [approved, setApproved] = useState<string>("");
-  const [info, setInfo] = useState<PackInfo>(emptyInfo);
+  const [approved, setApproved] = useState<string>(project.approved_concept ?? "");
+  const [info, setInfo] = useState<PackInfo>({ ...emptyInfo, ...((project.info as Partial<PackInfo>) ?? {}) });
   const chatEnd = useRef<HTMLDivElement>(null);
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
   const concept = approved || lastAssistant;
@@ -107,7 +118,91 @@ function Studio() {
   const [readyConcept, setReadyConcept] = useState("");
   const [refFile, setRefFile] = useState<File>();
   const [boardOpen, setBoardOpen] = useState(false);
-  const [styleNotes, setStyleNotes] = useState("");
+  const [styleNotes, setStyleNotes] = useState(project.style_notes ?? "");
+  const [qc, setQc] = useState("");
+  const [qcBusy, setQcBusy] = useState(false);
+  const loaded = useRef(false);
+
+  async function saveFile(kind: string, data: string | Blob, label: string) {
+    try {
+      const path = await uploadToStudio(project.id, data, kind);
+      await supabase.from("project_files").insert({ project_id: project.id, kind, label, path });
+      onFilesChanged?.();
+      return path;
+    } catch (e) {
+      toast.error(`Couldn't save ${kind}: ${(e as Error).message}`);
+    }
+  }
+
+  // Load saved product + latest dieline / mockup / artwork
+  useEffect(() => {
+    (async () => {
+      if (project.product_path) {
+        const f = await pathToFile(project.product_path, "product.png").catch(() => undefined);
+        if (f) {
+          setProductFile(f);
+          setProduct(await fileToDataUrl(f));
+          setTask((t) => t ?? (project.approved_concept ? "ready" : "concept"));
+        }
+      }
+      const { data } = await supabase
+        .from("project_files")
+        .select("kind,path,label,created_at")
+        .eq("project_id", project.id)
+        .in("kind", ["dieline", "mockup", "artwork"])
+        .order("created_at", { ascending: false });
+      const latest = (k: string) => data?.find((d) => d.kind === k);
+      const d = latest("dieline"), m = latest("mockup"), a = latest("artwork");
+      if (d) { setDieline(await urlToDataUrl(await signedUrl(d.path))); setDielineName(d.label || "dieline"); }
+      if (m) { setMockup(await urlToDataUrl(await signedUrl(m.path))); setMockupFinal(true); }
+      if (a) { setArt(await urlToDataUrl(await signedUrl(a.path))); setArtFinal(true); }
+      loaded.current = true;
+    })().catch(() => (loaded.current = true));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [project.id]);
+
+  // Autosave chat, concept, info and style notes
+  useEffect(() => {
+    if (thinking) return;
+    const t = setTimeout(() => {
+      void supabase
+        .from("projects")
+        .update({
+          messages: messages as never,
+          approved_concept: approved,
+          info: info as never,
+          style_notes: styleNotes,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", project.id);
+    }, 800);
+    return () => clearTimeout(t);
+  }, [messages, approved, info, styleNotes, thinking, project.id]);
+
+  // Apply customer feedback automatically
+  useEffect(() => {
+    if (!instruction) return;
+    (async () => {
+      if (instruction.target === "artwork" && dieline) await renderArtwork(instruction.text);
+      else await send(`Customer feedback to apply:\n${instruction.text}\n\nUpdate the design accordingly and restate it in full starting with "## FINAL CONCEPT".`, true);
+      onInstructionDone?.();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [instruction?.id]);
+
+  async function runQc() {
+    if (!art) return;
+    setQcBusy(true);
+    setQc("");
+    try {
+      await streamQc(art, info, concept, (d) => setQc((q) => q + d));
+      void logActivity(project.id, "AI quality check run on artwork", "qc");
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setQcBusy(false);
+    }
+  }
   const [reading, setReading] = useState(false);
 
   async function readFile(png: string) {
@@ -154,6 +249,8 @@ function Studio() {
     if (!f) return;
     setProductFile(f);
     setProduct(await fileToDataUrl(f));
+    const path = await saveFile("product", f, f.name);
+    if (path) await supabase.from("projects").update({ product_path: path }).eq("id", project.id);
   }
 
   async function send(override?: string, approve = false) {
@@ -172,7 +269,7 @@ function Studio() {
     setThinking(true);
     let full = "";
     try {
-      await streamConcept(next, product, (d) => {
+      await streamConcept(next, product, { styleGuide, learnings }, (d) => {
         full += d;
         setMessages((m) => {
           const c = [...m];
@@ -183,6 +280,7 @@ function Studio() {
       });
       if (approve) {
         setApproved(full);
+        void logActivity(project.id, "Final concept developed/updated", "concept");
         setBoardOpen(true);
         void renderMockup(full);
       } else if (parseConcepts(full).length > 0) {
@@ -217,6 +315,7 @@ function Studio() {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setMockup(src);
         setMockupFinal(fin);
+        if (fin) void saveFile("mockup", src, "3D design");
       });
     } catch (e) {
       toast.error((e as Error).message);
@@ -231,6 +330,7 @@ function Studio() {
       const png = await dielineToPng(f);
       setDieline(png);
       void readFile(png);
+      void saveFile("dieline", png, f.name);
       setDielineName(f.name.replace(/\.[^.]+$/, ""));
       setArt(undefined);
     } catch (e) {
@@ -238,7 +338,7 @@ function Studio() {
     }
   }
 
-  async function renderArtwork() {
+  async function renderArtwork(extra?: string) {
     if (!dieline || !concept) {
       toast.error("Upload a dieline and create a concept first");
       return;
@@ -249,7 +349,7 @@ function Studio() {
     const form = new FormData();
     form.append(
       "prompt",
-      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (description, ingredients, warnings, item number) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (description, ingredients, warnings, item number) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
     form.append("image[]", await dataUrlToFile(dieline, "dieline.png"));
     if (mockup && mockupFinal) form.append("image[]", await dataUrlToFile(mockup, "mockup.png"));
@@ -257,6 +357,7 @@ function Studio() {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setArt(src);
         setArtFinal(fin);
+        if (fin) void saveFile("artwork", src, extra ? "Artwork (revised)" : "Artwork");
       });
     } catch (e) {
       toast.error((e as Error).message);
@@ -272,6 +373,7 @@ function Studio() {
       const svg = await buildLayeredSvg(art, dieline, dielineName || "artwork", info);
       const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
       download(url, `${dielineName || "dieline"}-artwork.svg`);
+      void saveFile("final", new Blob([svg], { type: "image/svg+xml" }), "Layered SVG for Illustrator");
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } finally {
       setSvgBusy(false);
@@ -279,20 +381,7 @@ function Studio() {
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b">
-        <div className="mx-auto flex max-w-7xl items-end justify-between gap-6 px-6 py-6">
-          <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-accent">
-              concept → mockup → dieline → illustrator
-            </p>
-            <h1 className="mt-1 text-4xl font-extrabold tracking-tight md:text-5xl">Dieline Studio</h1>
-          </div>
-          <div className="dash-cut hidden rounded-md px-3 py-2 font-mono text-xs text-muted-foreground md:block">
-            cut line ┄┄┄ fold line ── bleed 3mm
-          </div>
-        </div>
-      </header>
+    <div>
 
       <DesignBoard
         open={boardOpen}
@@ -305,12 +394,13 @@ function Studio() {
         mockupFinal={mockupFinal}
         mockBusy={mockBusy}
         onChoose={choose}
+        onPreview={(o, src) => void saveFile("concept", src, `Concept ${o.n}: ${o.name}`)}
         onRender={() => renderMockup()}
         onRefine={(t) =>
           send(`${t}\n\nRestate the full updated design starting with "## FINAL CONCEPT".`, true)
         }
       />
-      <main className="mx-auto grid max-w-7xl gap-6 px-6 py-8 lg:grid-cols-[1.05fr_1fr]">
+      <main className="grid gap-6 lg:grid-cols-[1.05fr_1fr]">
         <div className="flex flex-col gap-6">
           <Step n="01" title="Your product">
             <label className="flex cursor-pointer items-center gap-4">
@@ -483,7 +573,7 @@ function Studio() {
               <ImageSlot src={art} final={artFinal} loading={artBusy} empty="Flat artwork appears here." />
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="cut" onClick={renderArtwork} disabled={artBusy || !dieline || !concept}>
+              <Button variant="cut" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
                 {artBusy ? "Placing artwork…" : art ? "Regenerate artwork" : "Place artwork on dieline"}
               </Button>
               {art && artFinal && (
