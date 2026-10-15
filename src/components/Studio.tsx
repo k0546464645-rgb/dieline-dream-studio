@@ -79,6 +79,7 @@ export type StudioProject = {
   info: unknown;
   style_notes: string;
   style_guide_id: string | null;
+  project_type: string;
   product_path: string | null;
 };
 export type StudioInstruction = { id: string; text: string; target: "concept" | "artwork" } | null;
@@ -547,7 +548,11 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground">No photo? Upload an items list from Excel instead — picking an item fills the info form.</p>
+              <p className="text-xs text-muted-foreground">
+                {project.project_type && project.project_type !== "single"
+                  ? "Multi-item project — import the items list from Excel and pick an item to start; the info form fills automatically."
+                  : "No photo? Upload an items list from Excel instead — picking an item fills the info form."}
+              </p>
             </div>
             {product && (
               <div className="mt-5">
