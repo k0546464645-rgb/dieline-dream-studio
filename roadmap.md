@@ -21,6 +21,8 @@
 - [ ] Design source choice per project: from style guide or AI-created; suggest combined packaging
 - [ ] Per-step chat box for comments + AI questions to the designer at each stage
 - [ ] Packaging presentation options: blister, color box, display box, product on store shelf
+- [ ] Step 04: split front/back view + packaging type options (display carton, window box, blister, shipping carton, shelf scene)
+- [ ] Step 05: single window for adding dielines (not two side-by-side)
 - [ ] Product image + label upload for decorating the product itself (e.g. bottle)
 - [ ] Master carton artwork: design first, later match supplier layout; final artwork fitted on supplier dieline
 - [ ] Licensee section in style-guide storage with licensed materials
