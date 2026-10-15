@@ -59,7 +59,7 @@ export async function parseItemsFile(file: File): Promise<ImportedItem[]> {
     const nameHe = get("productName");
     const brand = get("brand");
     if (!nameHe && !get("barcode") && !get("itemNumber")) continue;
-    const { manufacturer, importer } = splitManufacturer(get("importer"));
+    const split = splitManufacturer(get("importer"));
     const extra = [
       get("volume") && `Volume: ${get("volume")} ml`,
       get("weight") && `Weight: ${get("weight")}`,
@@ -77,12 +77,12 @@ export async function parseItemsFile(file: File): Promise<ImportedItem[]> {
         instructionsHe: get("instructionsHe"),
         ingredients: get("ingredients"),
         warnings: get("warnings"),
-        importer,
-        manufacturer: manufacturer || get("manufacturer"),
-        madeIn: get("madeIn"),
+        importer: split.importer,
+        manufacturer: split.manufacturer || get("manufacturer"),
+        madeIn: get("madeIn") || split.madeIn,
         expiry: get("expiry"),
         scent: get("scent"),
-        grade: get("grade"),
+        grade: get("grade") || split.grade,
         extra,
       },
     });
