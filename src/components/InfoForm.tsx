@@ -98,33 +98,42 @@ export function InfoForm({ value, onChange }: { value: PackInfo; onChange: (v: P
   const dir = RTL.has(value.language) ? "rtl" : "ltr";
   const set = (k: keyof PackInfo) => (e: { target: { value: string } }) => onChange({ ...value, [k]: e.target.value });
   const status = barcodeStatus(value.barcode);
+  const [baseOpen, setBaseOpen] = useState(true);
   const [frontOpen, setFrontOpen] = useState(true);
   const [backOpen, setBackOpen] = useState(false);
   return (
     <div className="space-y-4">
-      <div className="space-y-1.5">
-        <Label>Packaging language</Label>
-        <select
-          value={value.language}
-          onChange={set("language")}
-          className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-        >
-          {LANGUAGES.map((l) => (
-            <option key={l}>{l}</option>
-          ))}
-        </select>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
+      <Panel
+        title="Product info · פרטי מוצר"
+        subtitle="Packaging language, barcode, item number"
+        open={baseOpen}
+        onOpenChange={setBaseOpen}
+      >
         <div className="space-y-1.5">
-          <Label>Barcode (EAN-13)</Label>
-          <Input value={value.barcode} onChange={set("barcode")} inputMode="numeric" className="bg-background font-mono" />
-          {status && <p className="font-mono text-[11px] text-muted-foreground">{status}</p>}
+          <Label>Packaging language</Label>
+          <select
+            value={value.language}
+            onChange={set("language")}
+            className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+          >
+            {LANGUAGES.map((l) => (
+              <option key={l}>{l}</option>
+            ))}
+          </select>
         </div>
-        <div className="space-y-1.5">
-          <Label>Item number</Label>
-          <Input value={value.itemNumber} onChange={set("itemNumber")} className="bg-background font-mono" />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label>Barcode (EAN-13)</Label>
+            <Input value={value.barcode} onChange={set("barcode")} inputMode="numeric" className="bg-background font-mono" />
+            {status && <p className="font-mono text-[11px] text-muted-foreground">{status}</p>}
+          </div>
+          <div className="space-y-1.5">
+            <Label>Item number</Label>
+            <Input value={value.itemNumber} onChange={set("itemNumber")} className="bg-background font-mono" />
+          </div>
         </div>
-      </div>
+      </Panel>
+
 
       <Panel title="Front panel · צד קידמי" subtitle="Product name, tagline, scent — what the shopper sees first" open={frontOpen} onOpenChange={setFrontOpen}>
         <div className="space-y-1.5">
