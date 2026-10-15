@@ -35,6 +35,14 @@ function Step({ n, title, children }: { n: string; title: string; children: Reac
   );
 }
 
+const PACK_TYPES = [
+  ["window", "Color box with window", "packed in a printed color box with a transparent window showing the product inside"],
+  ["display", "Display box", "standing in a retail counter display box with a printed header card"],
+  ["blister", "Blister pack", "sealed in blister packaging: clear plastic blister on a printed backing card"],
+  ["master", "Shipping carton", "packed inside a printed shipping master carton"],
+  ["shelf", "On a store shelf", "standing on a supermarket store shelf among other products, realistic retail scene"],
+] as const;
+
 function ImageSlot({
   src,
   final,
@@ -99,9 +107,10 @@ export function Studio({
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
 
-  const [mockup, setMockup] = useState<string>();
-  const [mockupFinal, setMockupFinal] = useState(false);
-  const [mockBusy, setMockBusy] = useState(false);
+  const [mockups, setMockups] = useState<{ front?: string; back?: string }>({});
+  const [mockFinal, setMockFinal] = useState<{ front?: boolean; back?: boolean }>({});
+  const [mockBusy, setMockBusy] = useState<"front" | "back" | null>(null);
+  const [packType, setPackType] = useState("window");
 
   const [dieline, setDieline] = useState<string>();
   const [dielineName, setDielineName] = useState("");
@@ -152,12 +161,13 @@ export function Studio({
         .from("project_files")
         .select("kind,path,label,created_at")
         .eq("project_id", project.id)
-        .in("kind", ["dieline", "mockup", "artwork"])
+        .in("kind", ["dieline", "mockup", "mockup-back", "artwork"])
         .order("created_at", { ascending: false });
       const latest = (k: string) => data?.find((d) => d.kind === k);
-      const d = latest("dieline"), m = latest("mockup"), a = latest("artwork");
+      const d = latest("dieline"), m = latest("mockup"), mb = latest("mockup-back"), a = latest("artwork");
       if (d) { setDieline(await urlToDataUrl(await signedUrl(d.path))); setDielineName(d.label || "dieline"); }
-      if (m) { setMockup(await urlToDataUrl(await signedUrl(m.path))); setMockupFinal(true); }
+      if (m) { const s = await urlToDataUrl(await signedUrl(m.path)); setMockups((x) => ({ ...x, front: s })); setMockFinal((x) => ({ ...x, front: true })); }
+      if (mb) { const s = await urlToDataUrl(await signedUrl(mb.path)); setMockups((x) => ({ ...x, back: s })); setMockFinal((x) => ({ ...x, back: true })); }
       if (a) { setArt(await urlToDataUrl(await signedUrl(a.path))); setArtFinal(true); }
       loaded.current = true;
     })().catch(() => (loaded.current = true));
@@ -292,7 +302,7 @@ export function Studio({
         setApproved(full);
         void logActivity(project.id, "Final concept developed/updated", "concept");
         setBoardOpen(true);
-        void renderMockup(full);
+        void renderMockup("front", full);
       } else if (parseConcepts(full).length > 0) {
         setBoardOpen(true);
       }
@@ -305,32 +315,33 @@ export function Studio({
     }
   }
 
-  async function renderMockup(conceptText?: string) {
+  async function renderMockup(view: "front" | "back" = "front", conceptText?: string) {
     const concept = conceptText || approved || lastAssistant;
     if (!productFile || !concept) {
       toast.error("Upload a product and create a concept first");
       return;
     }
-    setMockBusy(true);
-    setMockup(undefined);
-    setMockupFinal(false);
+    setMockBusy(view);
+    setMockups((m) => ({ ...m, [view]: undefined }));
+    setMockFinal((f) => ({ ...f, [view]: false }));
+    const pack = PACK_TYPES.find(([k]) => k === packType);
     const form = new FormData();
     form.append(
       "prompt",
-      `Photorealistic 3D studio product render of THIS exact product (keep its real shape, proportions, material and structure) with new packaging graphics applied according to this design concept. Three-quarter view, soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.${styleNotes ? `\n\nEXISTING BRAND STYLE (logo, fonts, imagery to reuse):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
+      `Photorealistic 3D studio render of THIS exact product (keep its real shape, proportions, material and structure) ${pack ? pack[2] : "with new packaging graphics applied"} according to this design concept. ${view === "front" ? "Straight-on FRONT view: show the front panel design clearly, centered." : "Straight-on BACK view: show the back panel with its full information layout (text blocks, barcode area)."} Soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.${styleNotes ? `\n\nEXISTING BRAND STYLE (logo, fonts, imagery to reuse):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
     );
     form.append("image[]", productFile);
     if (refFile) form.append("image[]", refFile);
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
-        setMockup(src);
-        setMockupFinal(fin);
-        if (fin) void saveFile("mockup", src, "3D design");
+        setMockups((m) => ({ ...m, [view]: src }));
+        setMockFinal((f) => ({ ...f, [view]: fin }));
+        if (fin) void saveFile(view === "front" ? "mockup" : "mockup-back", src, view === "front" ? "3D design — front" : "3D design — back");
       }, undefined, await authHeaders());
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
-      setMockBusy(false);
+      setMockBusy(null);
     }
   }
 
@@ -365,10 +376,10 @@ export function Studio({
     const form = new FormData();
     form.append(
       "prompt",
-      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockups.front ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
     form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
-    if (mockup && mockupFinal) form.append("image[]", await dataUrlToFile(mockup, "mockup.png"));
+    if (mockups.front && mockFinal.front) form.append("image[]", await dataUrlToFile(mockups.front, "mockup.png"));
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setArt(src);
@@ -410,12 +421,12 @@ export function Studio({
         options={options}
         approved={approved}
         thinking={thinking}
-        mockup={mockup}
-        mockupFinal={mockupFinal}
-        mockBusy={mockBusy}
+        mockup={mockups.front}
+        mockupFinal={mockFinal.front ?? false}
+        mockBusy={mockBusy === "front"}
         onChoose={choose}
         onPreview={(o, src) => void saveFile("concept", src, `Concept ${o.n}: ${o.name}`)}
-        onRender={() => renderMockup()}
+        onRender={() => renderMockup("front")}
         onRefine={(t) =>
           send(`${t}\n\nRestate the full updated design starting with "## FINAL CONCEPT".`, true)
         }
@@ -565,47 +576,75 @@ export function Studio({
 
         <div className="flex flex-col gap-6">
           <Step n="04" title="3D mockup">
-            <ImageSlot
-              src={mockup}
-              final={mockupFinal}
-              loading={mockBusy}
-              empty="Your product rendered with the new concept appears here."
-            />
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="cut" onClick={() => renderMockup()} disabled={mockBusy || !concept || !productFile}>
-                {mockBusy ? "Rendering…" : mockup ? "Re-render mockup" : "Render 3D mockup"}
-              </Button>
-              {mockup && mockupFinal && (
-                <Button variant="outline" onClick={() => download(mockup, "mockup.png")}>
-                  Download PNG
-                </Button>
-              )}
+            <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Packaging type</p>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {PACK_TYPES.map(([k, label]) => (
+                <button
+                  key={k}
+                  onClick={() => setPackType(k)}
+                  className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${packType === k ? "border-accent bg-background text-accent ring-1 ring-accent" : "text-muted-foreground hover:border-foreground hover:text-foreground"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {(["front", "back"] as const).map((view) => (
+                <div key={view}>
+                  <ImageSlot
+                    src={mockups[view]}
+                    final={mockFinal[view]}
+                    loading={mockBusy === view}
+                    empty={view === "front" ? "Front view" : "Back view"}
+                  />
+                  <p className="mt-1.5 text-center font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {view === "front" ? "Front · קדימה" : "Back · אחורה"}
+                  </p>
+                  <div className="mt-2 flex justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="cut"
+                      onClick={() => renderMockup(view)}
+                      disabled={mockBusy !== null || !concept || !productFile}
+                    >
+                      {mockBusy === view ? "…" : mockups[view] ? "Re-render" : "Render"}
+                    </Button>
+                    {mockups[view] && mockFinal[view] && (
+                      <Button size="sm" variant="outline" onClick={() => download(mockups[view]!, `mockup-${view}.png`)}>
+                        PNG
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </Step>
 
           <Step n="05" title="Artwork on your dieline">
-            <div className="grid grid-cols-2 gap-3">
-              <label className="cursor-pointer">
-                <div className="bg-grid dash-cut flex aspect-square items-center justify-center overflow-hidden rounded-md bg-muted">
-                  {dieline ? (
-                    <img src={dieline} alt="Dieline" className="h-full w-full object-contain" />
-                  ) : (
-                    <p className="px-4 text-center font-mono text-xs text-muted-foreground">
-                      + dieline
-                      <br />
-                      PDF · AI · PNG · JPG
-                    </p>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept=".pdf,.ai,.eps,image/png,image/jpeg"
-                  className="hidden"
-                  onChange={(e) => onDieline(e.target.files?.[0])}
-                />
-              </label>
-              <ImageSlot src={art} final={artFinal} loading={artBusy} empty="Flat artwork appears here." />
-            </div>
+            <label className="block cursor-pointer">
+              <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
+                {dieline ? (
+                  <img src={dieline} alt="Dieline" className="h-full w-full object-contain" />
+                ) : (
+                  <p className="px-4 text-center font-mono text-xs text-muted-foreground">
+                    + Add a dieline / layout
+                    <br />
+                    PDF · AI · PNG · JPG
+                  </p>
+                )}
+              </div>
+              <input
+                type="file"
+                accept=".pdf,.ai,.eps,image/png,image/jpeg"
+                className="hidden"
+                onChange={(e) => onDieline(e.target.files?.[0])}
+              />
+            </label>
+            {(art || artBusy) && (
+              <div className="mt-3">
+                <ImageSlot src={art} final={artFinal} loading={artBusy} empty="Flat artwork appears here." />
+              </div>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
               <Button variant="cut" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
                 {artBusy ? "Placing artwork…" : art ? "Regenerate artwork" : "Place artwork on dieline"}
