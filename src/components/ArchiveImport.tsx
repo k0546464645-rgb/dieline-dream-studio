@@ -61,11 +61,10 @@ async function extractArchive(file: File): Promise<Entry[]> {
     return out;
   }
   if (lower.endsWith(".rar")) {
-    const [{ createExtractorFromData }, wasm] = await Promise.all([
+    const [{ createExtractorFromData }, wasmBinary] = await Promise.all([
       import("node-unrar-js"),
-      import("node-unrar-js/esm/js/unrar.wasm?url"),
+      fetch("/wasm/unrar.wasm").then((r) => r.arrayBuffer()),
     ]);
-    const wasmBinary = await (await fetch(wasm.default)).arrayBuffer();
     const extractor = await createExtractorFromData({ data: await file.arrayBuffer(), wasmBinary });
     const { files } = extractor.extract();
     const out: Entry[] = [];
