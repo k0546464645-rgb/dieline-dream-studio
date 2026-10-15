@@ -4,7 +4,8 @@ export const BUCKET = "studio";
 
 export async function uploadToStudio(folder: string, data: Blob | string, name: string) {
   const blob = typeof data === "string" ? await (await fetch(data)).blob() : data;
-  const ext = (blob.type.split("/")[1] || "png").replace("jpeg", "jpg").replace("svg+xml", "svg");
+  const nameExt = name.includes(".") ? name.split(".").pop()!.toLowerCase() : "";
+  const ext = (nameExt || blob.type.split("/")[1] || "bin").replace("jpeg", "jpg").replace("svg+xml", "svg");
   const path = `${folder}/${Date.now()}-${name.replace(/[^\w.-]+/g, "_")}.${ext}`;
   const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
     contentType: blob.type || "image/png",
@@ -56,4 +57,15 @@ export const STAGES = [
 
 export function stageLabel(id: string) {
   return STAGES.find((s) => s.id === id)?.label ?? id;
+}
+
+export const PROJECT_TYPES = [
+  { id: "single", label: "Single product · מוצר אחד", hint: "One product, one packaging" },
+  { id: "multiple", label: "Multiple products · מספר מוצרים", hint: "Several items, each with its own packaging" },
+  { id: "series", label: "Series · סדרה", hint: "Same product in variants (scents, colors, sizes)" },
+  { id: "collection", label: "Collection · קולקציה", hint: "A full brand line with a shared design language" },
+] as const;
+
+export function projectTypeLabel(id: string) {
+  return PROJECT_TYPES.find((t) => t.id === id)?.label ?? id;
 }

@@ -168,6 +168,7 @@ export type Database = {
           messages: Json
           name: string
           product_path: string | null
+          project_type: string
           stage: string
           status: string
           style_guide_id: string | null
@@ -188,6 +189,7 @@ export type Database = {
           messages?: Json
           name: string
           product_path?: string | null
+          project_type?: string
           stage?: string
           status?: string
           style_guide_id?: string | null
@@ -208,6 +210,7 @@ export type Database = {
           messages?: Json
           name?: string
           product_path?: string | null
+          project_type?: string
           stage?: string
           status?: string
           style_guide_id?: string | null
