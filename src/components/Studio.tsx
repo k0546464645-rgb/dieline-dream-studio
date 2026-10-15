@@ -35,6 +35,14 @@ function Step({ n, title, children }: { n: string; title: string; children: Reac
   );
 }
 
+const PACK_TYPES = [
+  ["window", "Color box with window", "packed in a printed color box with a transparent window showing the product inside"],
+  ["display", "Display box", "standing in a retail counter display box with a printed header card"],
+  ["blister", "Blister pack", "sealed in blister packaging: clear plastic blister on a printed backing card"],
+  ["master", "Shipping carton", "packed inside a printed shipping master carton"],
+  ["shelf", "On a store shelf", "standing on a supermarket store shelf among other products, realistic retail scene"],
+] as const;
+
 function ImageSlot({
   src,
   final,
@@ -294,7 +302,7 @@ export function Studio({
         setApproved(full);
         void logActivity(project.id, "Final concept developed/updated", "concept");
         setBoardOpen(true);
-        void renderMockup(full);
+        void renderMockup("front", full);
       } else if (parseConcepts(full).length > 0) {
         setBoardOpen(true);
       }
@@ -371,7 +379,7 @@ export function Studio({
       `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
     form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
-    if (mockup && mockupFinal) form.append("image[]", await dataUrlToFile(mockup, "mockup.png"));
+    if (mockups.front && mockFinal.front) form.append("image[]", await dataUrlToFile(mockups.front, "mockup.png"));
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setArt(src);
@@ -413,12 +421,12 @@ export function Studio({
         options={options}
         approved={approved}
         thinking={thinking}
-        mockup={mockup}
-        mockupFinal={mockupFinal}
-        mockBusy={mockBusy}
+        mockup={mockups.front}
+        mockupFinal={mockFinal.front}
+        mockBusy={mockBusy === "front"}
         onChoose={choose}
         onPreview={(o, src) => void saveFile("concept", src, `Concept ${o.n}: ${o.name}`)}
-        onRender={() => renderMockup()}
+        onRender={() => renderMockup("front")}
         onRefine={(t) =>
           send(`${t}\n\nRestate the full updated design starting with "## FINAL CONCEPT".`, true)
         }
