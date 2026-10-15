@@ -625,7 +625,7 @@ export function Studio({
               <div className="mt-4 rounded-md border bg-background p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-mono text-[11px] uppercase tracking-wider text-accent">AI quality control</p>
-                  <Button size="sm" variant="outline" onClick={runQc} disabled={qcBusy}>
+                  <Button size="sm" variant="outline" onClick={() => runQc()} disabled={qcBusy}>
                     {qcBusy ? "Checking…" : qc ? "Check again" : "Run quality check"}
                   </Button>
                 </div>
