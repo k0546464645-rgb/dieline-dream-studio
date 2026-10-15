@@ -1,6 +1,7 @@
 # Roadmap
 - [ ] UI redesign: innovative, efficient, reorganized across all pages (dark studio console, sidebar nav, pipeline steps)
 - [ ] Streamline & automate every workflow step: auto chain concept→mockup→artwork→QC, minimal clicks
+- [ ] After product photo upload: AI automatically asks the right questions (audience, brand, packaging type)
 - [x] Task choice after product upload (create concept / design from approved concept)
 - [x] Design board window to view concepts/design and choose direction
 - [x] Read uploaded dieline/artwork file to auto-fill info and extract style
