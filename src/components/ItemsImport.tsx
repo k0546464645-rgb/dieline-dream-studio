@@ -10,6 +10,7 @@ export function ItemsImport({ onPick }: { onPick: (info: Partial<PackInfo>) => v
   const inputRef = useRef<HTMLInputElement>(null);
   const [items, setItems] = useState<ImportedItem[] | null>(null);
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
   async function handleFile(f: File) {
     setBusy(true);
