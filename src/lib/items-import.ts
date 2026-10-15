@@ -38,7 +38,7 @@ function splitManufacturer(block: string): { manufacturer: string; importer: str
   const madeIn = madeInLines.map((l) => l.replace(/.*תוצרת\s*/i, "").replace(/.*made in\s*/i, "").trim());
   const taken = new Set([...mfr, ...grade, ...madeInLines]);
   const rest = lines.filter((l) => !taken.has(l));
-  return { manufacturer: mfr.join("\n"), importer: rest.join("\n"), grade: grade.join(" "), madeIn: madeIn.join(" ") };
+  return { manufacturer: mfr.join("\n"), importer: rest.join("\n"), grade: grade.join(" ").replace(/תוצרת.*/i, "").trim(), madeIn: madeIn.join(" ") };
 }
 
 /** Parses an .xlsx/.csv items sheet (two-row EN/HE headers like the toiletries template). */
