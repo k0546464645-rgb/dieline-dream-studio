@@ -253,6 +253,20 @@ function ProjectPage() {
                       <div className="flex items-center justify-between gap-1 px-1 pt-1">
                         <p className="truncate text-[11px]">{f.label}</p>
                         <button
+                          aria-label="Download file"
+                          title="Download · הורדה"
+                          className="shrink-0 text-muted-foreground hover:text-foreground"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const { data, error } = await supabase.storage.from("studio").createSignedUrl(f.path, 60, { download: f.label.split("/").pop() || true });
+                            if (error || !data) return toast.error("Couldn't create a download link");
+                            window.open(data.signedUrl, "_blank");
+                          }}
+                        >
+                          ⬇
+                        </button>
+                        <button
                           aria-label="Delete file"
                           title="Delete · מחיקה"
                           className="shrink-0 text-muted-foreground hover:text-destructive"
