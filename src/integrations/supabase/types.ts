@@ -117,6 +117,42 @@ export type Database = {
           },
         ]
       }
+      customers: {
+        Row: {
+          contact_name: string
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          name: string
+          notes: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          contact_name?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          name: string
+          notes?: string
+          phone?: string
+          updated_at?: string
+        }
+        Update: {
+          contact_name?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          name?: string
+          notes?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       project_files: {
         Row: {
           created_at: string
