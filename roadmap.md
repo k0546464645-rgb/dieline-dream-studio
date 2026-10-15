@@ -23,7 +23,7 @@
 - [x] Packaging presentation options: blister, color box with window, display box, shipping carton, store shelf (step 04 selector, verified live)
 - [x] Step 04: split front/back mockup view with per-side render + packaging type options (verified live)
 - [x] Step 05: single window for adding dielines (verified live)
-- [x] Info form: collapsible front-panel / back-panel windows (verified live)
+- [x] Info form: collapsible product-info / front-panel / back-panel windows (verified live)
 - [ ] Product image + label upload for decorating the product itself (e.g. bottle)
 - [ ] Master carton artwork: design first, later match supplier layout; final artwork fitted on supplier dieline
 - [ ] Licensee section in style-guide storage with licensed materials
