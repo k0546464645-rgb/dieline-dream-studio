@@ -155,6 +155,53 @@ export type Database = {
           },
         ]
       }
+      project_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          info: Json
+          name: string
+          notes: string
+          product_path: string | null
+          project_id: string
+          sort: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          info?: Json
+          name?: string
+          notes?: string
+          product_path?: string | null
+          project_id: string
+          sort?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          info?: Json
+          name?: string
+          notes?: string
+          product_path?: string | null
+          project_id?: string
+          sort?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           approved_concept: string
