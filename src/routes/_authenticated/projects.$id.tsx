@@ -8,6 +8,7 @@ import { fileToDataUrl } from "@/lib/studio-client";
 import { Studio, type StudioInstruction } from "@/components/Studio";
 import { SendApproval, ShareLinks } from "@/components/SendApproval";
 import { ArchiveImport } from "@/components/ArchiveImport";
+import { ProjectItems } from "@/components/ProjectItems";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -176,6 +177,7 @@ function ProjectPage() {
           <TabsTrigger value="design">Design</TabsTrigger>
           <TabsTrigger value="approvals">Approvals {approvals.data?.some((a) => a.status !== "pending" && !a.applied && a.status !== "approved") ? "•" : ""}</TabsTrigger>
           <TabsTrigger value="files">Folder ({files.data?.length ?? 0})</TabsTrigger>
+          {p.project_type !== "single" && <TabsTrigger value="items">Items · פריטים</TabsTrigger>}
           <TabsTrigger value="details">Details</TabsTrigger>
           <TabsTrigger value="history">History</TabsTrigger>
         </TabsList>
@@ -248,7 +250,24 @@ function ProjectPage() {
                       if (data) window.open(data.signedUrl, "_blank");
                     }} className="rounded-md border bg-card p-1 hover:border-foreground">
                       {f.url && /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.path) ? <img src={f.url} alt="" className="aspect-square w-full rounded object-cover" /> : <div className="bg-grid flex aspect-square items-center justify-center rounded bg-muted font-mono text-xs uppercase">{f.path.split(".").pop()}</div>}
-                      <p className="truncate px-1 pt-1 text-[11px]">{f.label}</p>
+                      <div className="flex items-center justify-between gap-1 px-1 pt-1">
+                        <p className="truncate text-[11px]">{f.label}</p>
+                        <button
+                          aria-label="Delete file"
+                          title="Delete · מחיקה"
+                          className="shrink-0 text-muted-foreground hover:text-destructive"
+                          onClick={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            await supabase.storage.from("studio").remove([f.path]);
+                            await supabase.from("project_files").delete().eq("id", f.id);
+                            qc.invalidateQueries({ queryKey: ["files", id] });
+                            toast.success("File deleted");
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
                       <p className="px-1 font-mono text-[10px] text-muted-foreground">{new Date(f.created_at).toLocaleDateString()}</p>
                     </a>
                   ))}
@@ -258,6 +277,12 @@ function ProjectPage() {
             ))}
           </div>
         </TabsContent>
+
+        {p.project_type !== "single" && (
+          <TabsContent value="items">
+            <ProjectItems projectId={id} />
+          </TabsContent>
+        )}
 
         <TabsContent value="details">
           <DetailsForm project={p} onSave={update} />
