@@ -422,7 +422,7 @@ export function Studio({
         approved={approved}
         thinking={thinking}
         mockup={mockups.front}
-        mockupFinal={mockFinal.front}
+        mockupFinal={mockFinal.front ?? false}
         mockBusy={mockBusy === "front"}
         onChoose={choose}
         onPreview={(o, src) => void saveFile("concept", src, `Concept ${o.n}: ${o.name}`)}
