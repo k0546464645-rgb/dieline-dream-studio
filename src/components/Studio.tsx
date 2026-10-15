@@ -20,6 +20,7 @@ import {
 } from "@/lib/studio-client";
 import { DesignBoard, parseConcepts, type ConceptOption } from "@/components/DesignBoard";
 import { InfoForm, LANGUAGES, emptyInfo, infoPrompt } from "@/components/InfoForm";
+import { ItemsImport } from "@/components/ItemsImport";
 
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
@@ -527,6 +528,9 @@ export function Studio({
           </Step>
 
           <Step n="03" title="Product information">
+            <div className="mb-3">
+              <ItemsImport onPick={(patch) => setInfo((cur) => ({ ...cur, ...patch }))} />
+            </div>
             <InfoForm value={info} onChange={setInfo} />
           </Step>
         </div>
