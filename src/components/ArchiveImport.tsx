@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import JSZip from "jszip";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -160,11 +160,32 @@ export function ArchiveImport({ projectId, onDone }: { projectId: string; onDone
   async function onDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragging(false);
+    await handleDataTransfer(e.dataTransfer);
+  }
+
+  // While this zone is mounted (the project's Folder tab), a drop anywhere on the
+  // page is handled here — the small dashed strip is only a visual hint.
+  useEffect(() => {
+    const over = (e: DragEvent) => e.preventDefault();
+    const drop = (e: DragEvent) => {
+      e.preventDefault();
+      if (e.dataTransfer) void handleDataTransfer(e.dataTransfer);
+    };
+    window.addEventListener("dragover", over);
+    window.addEventListener("drop", drop);
+    return () => {
+      window.removeEventListener("dragover", over);
+      window.removeEventListener("drop", drop);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
+
+  async function handleDataTransfer(dt: DataTransfer) {
     setBusy("Reading dropped items…");
     try {
       const loose: Entry[] = [];
       const archives: File[] = [];
-      const items = Array.from(e.dataTransfer.items);
+      const items = Array.from(dt.items);
       for (const item of items) {
         const entry = item.webkitGetAsEntry?.();
         if (entry?.isDirectory) {
