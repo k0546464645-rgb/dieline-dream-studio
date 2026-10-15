@@ -1,4 +1,6 @@
 # Roadmap
+- [x] Customers page: scrollable customer list + quick add form (name, contact, email, phone, notes) with per-customer project count
+- [ ] Customer billing system: charge per hour or per design concept (user will spec later)
 - [x] UI redesign: dark studio console theme, fixed sidebar nav, new landing page (verified live)
 - [~] Streamline & automate workflow steps: auto chain dieline→artwork→QC implemented; concept→mockup already auto
 - [x] After product photo upload: AI automatically asks the right questions (verified live end-to-end)
