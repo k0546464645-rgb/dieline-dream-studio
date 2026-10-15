@@ -138,6 +138,17 @@ export type PackInfo = {
   ingredients: string;
   warnings: string;
   extra: string;
+  marketingHe: string;
+  marketingEn: string;
+  instructionsHe: string;
+  instructionsEn: string;
+  scent: string;
+  expiry: string;
+  lotNo: string;
+  manufacturer: string;
+  importer: string;
+  madeIn: string;
+  grade: string;
 };
 
 const xmlEsc = (s: string) =>
@@ -153,8 +164,19 @@ export async function buildLayeredSvg(artwork: string, dieline: string, title: s
     ? [
         ["Product", info.productName],
         ["Description", info.description],
+        ["Marketing (HE)", info.marketingHe],
+        ["Marketing (EN)", info.marketingEn],
+        ["Instructions (HE)", info.instructionsHe],
+        ["Instructions (EN)", info.instructionsEn],
         ["Ingredients", info.ingredients],
         ["Warnings", info.warnings],
+        ["Scent", info.scent],
+        ["Expiry", info.expiry],
+        ["Lot no.", info.lotNo],
+        ["Manufacturer", info.manufacturer],
+        ["Importer", info.importer],
+        ["Made in", info.madeIn],
+        ["Grade", info.grade],
         ["Item no.", info.itemNumber],
         ["Other", info.extra],
       ].filter(([, v]) => v?.trim())
