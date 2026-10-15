@@ -26,6 +26,14 @@ export function ItemsImport({ onPick }: { onPick: (info: Partial<PackInfo>) => v
     }
   }
 
+  // Drag handlers: dropping an Excel file on the button reads it directly.
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const f = e.dataTransfer.files?.[0];
+    if (f) handleFile(f);
+  }
+
   return (
     <>
       <input
@@ -35,8 +43,21 @@ export function ItemsImport({ onPick }: { onPick: (info: Partial<PackInfo>) => v
         className="hidden"
         onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
       />
-      <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => inputRef.current?.click()}>
-        {busy ? "Reading file…" : "Import items from Excel"}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        disabled={busy}
+        onClick={() => inputRef.current?.click()}
+        onDragOver={(e) => {
+          e.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={onDrop}
+        className={dragging ? "border-dashed border-foreground" : undefined}
+      >
+        {busy ? "Reading file…" : "Import items from Excel — or drag the file here"}
       </Button>
       <Dialog open={!!items} onOpenChange={(o) => !o && setItems(null)}>
         <DialogContent className="max-h-[80vh] overflow-y-auto bg-background">
