@@ -262,10 +262,6 @@ export function Studio({
       draft.trim() ||
       (messages.length === 0 ? "Propose 3 packaging design concepts for this product." : "");
     if (!text || thinking) return;
-    if (messages.length === 0 && !product) {
-      toast.error("Upload a product photo first");
-      return;
-    }
     const next: ChatMsg[] = [...messages, { role: "user", text }];
     setMessages([...next, { role: "assistant", text: "" }]);
     setDraft("");
@@ -425,6 +421,17 @@ export function Studio({
                 onChange={(e) => onProduct(e.target.files?.[0])}
               />
             </label>
+            <div className="mt-3 flex flex-wrap items-center gap-3 border-t pt-3">
+              <ItemsImport
+                onPick={(patch) => {
+                  setInfo((cur) => ({ ...cur, ...patch }));
+                  if (!product && patch.productName) {
+                    setDraft(`Design packaging for: ${patch.productName}`);
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground">No photo? Upload an items list from Excel instead — picking an item fills the info form.</p>
+            </div>
             {product && (
               <div className="mt-5">
                 <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Choose a task</p>
@@ -477,7 +484,7 @@ export function Studio({
                 {messages.length === 0 && (
                   <p className="text-sm text-muted-foreground">
                     Describe the brand, audience and mood — or just press send to get three concepts.
-                    Then refine in chat, e.g. "Go with concept 2, make it more premium".
+                    Works with or without a product photo. Then refine in chat, e.g. "Go with concept 2, make it more premium".
                   </p>
                 )}
                 {messages.map((m, i) => (
