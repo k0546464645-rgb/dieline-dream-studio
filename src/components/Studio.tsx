@@ -118,6 +118,11 @@ export function Studio({
   const [artFinal, setArtFinal] = useState(false);
   const [artBusy, setArtBusy] = useState(false);
   const [svgBusy, setSvgBusy] = useState(false);
+  const [masterDieline, setMasterDieline] = useState<string>();
+  const [masterDielineName, setMasterDielineName] = useState("");
+  const [masterArt, setMasterArt] = useState<string>();
+  const [masterArtFinal, setMasterArtFinal] = useState(false);
+  const [masterArtBusy, setMasterArtBusy] = useState(false);
 
   const [approved, setApproved] = useState<string>(project.approved_concept ?? "");
   const [info, setInfo] = useState<PackInfo>({ ...emptyInfo, ...((project.info as Partial<PackInfo>) ?? {}) });
@@ -161,7 +166,7 @@ export function Studio({
         .from("project_files")
         .select("kind,path,label,created_at")
         .eq("project_id", project.id)
-        .in("kind", ["dieline", "mockup", "mockup-back", "artwork"])
+        .in("kind", ["dieline", "mockup", "mockup-back", "artwork", "dieline-master", "artwork-master"])
         .order("created_at", { ascending: false });
       const latest = (k: string) => data?.find((d) => d.kind === k);
       const d = latest("dieline"), m = latest("mockup"), mb = latest("mockup-back"), a = latest("artwork");
@@ -169,6 +174,9 @@ export function Studio({
       if (m) { const s = await urlToDataUrl(await signedUrl(m.path)); setMockups((x) => ({ ...x, front: s })); setMockFinal((x) => ({ ...x, front: true })); }
       if (mb) { const s = await urlToDataUrl(await signedUrl(mb.path)); setMockups((x) => ({ ...x, back: s })); setMockFinal((x) => ({ ...x, back: true })); }
       if (a) { setArt(await urlToDataUrl(await signedUrl(a.path))); setArtFinal(true); }
+      const dm = latest("dieline-master"), am = latest("artwork-master");
+      if (dm) { setMasterDieline(await urlToDataUrl(await signedUrl(dm.path))); setMasterDielineName(dm.label || "master carton"); }
+      if (am) { setMasterArt(await urlToDataUrl(await signedUrl(am.path))); setMasterArtFinal(true); }
       loaded.current = true;
     })().catch(() => (loaded.current = true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -394,6 +402,53 @@ export function Studio({
       toast.error((e as Error).message);
     } finally {
       setArtBusy(false);
+    }
+  }
+
+  async function onMasterDieline(f?: File) {
+    if (!f) return;
+    try {
+      const png = await dielineToPng(f);
+      setMasterDieline(png);
+      void saveFile("dieline-master", png, f.name);
+      setMasterDielineName(f.name.replace(/\.[^.]+$/, ""));
+      setMasterArt(undefined);
+      if (concept) {
+        toast.message("Concept found — placing master carton artwork automatically");
+        void renderMasterArtwork(png);
+      }
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function renderMasterArtwork(dielineOverride?: string) {
+    const dl = dielineOverride ?? masterDieline;
+    if (!dl || !concept) {
+      toast.error("Upload a master carton dieline and create a concept first");
+      return;
+    }
+    setMasterArtBusy(true);
+    setMasterArt(undefined);
+    setMasterArtFinal(false);
+    const form = new FormData();
+    form.append(
+      "prompt",
+      `The first image is a flat SHIPPING MASTER CARTON dieline (cut and fold template). Fill every panel of this exact dieline with flat, print-ready master carton artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.
+
+LAYOUT RULE: master carton artwork is industrial and clear — main panels carry the brand and product name large, item number, quantity per carton (e.g. "24 units · יחידות"), gross/net weight, carton dimensions, a white barcode/shipping-label box, and standard handling marks (fragile, keep dry, this way up, stacking limit) drawn as simple line icons. Legal line: manufacturer, importer, made in. Hebrew and English where provided.${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}\n\n${infoPrompt(info)}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+    );
+    form.append("image[]", await dataUrlToFile(dl, "master-dieline.png"));
+    try {
+      await streamImage("/api/edit-image", form, (src, fin) => {
+        setMasterArt(src);
+        setMasterArtFinal(fin);
+        if (fin) void saveFile("artwork-master", src, "Master carton artwork");
+      }, undefined, await authHeaders());
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setMasterArtBusy(false);
     }
   }
 
@@ -696,6 +751,45 @@ export function Studio({
               The SVG has layers for Artwork, Dieline (multiply), a real vector EAN-13 barcode and a hidden Editable Text layer with your info. Open it in
               Illustrator with File › Open.
             </p>
+            <div className="mt-5 border-t pt-4">
+              <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">
+                Shipping carton dieline · פריסת קרטון הובלה
+              </p>
+              <label className="block cursor-pointer">
+                <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
+                  {masterDieline ? (
+                    <img src={masterDieline} alt="Master carton dieline" className="h-full w-full object-contain" />
+                  ) : (
+                    <p className="px-4 text-center font-mono text-xs text-muted-foreground">
+                      + Add a master carton dieline / layout
+                      <br />
+                      PDF · AI · PNG · JPG
+                    </p>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf,.ai,.eps,image/png,image/jpeg"
+                  className="hidden"
+                  onChange={(e) => onMasterDieline(e.target.files?.[0])}
+                />
+              </label>
+              {(masterArt || masterArtBusy) && (
+                <div className="mt-3">
+                  <ImageSlot src={masterArt} final={masterArtFinal} loading={masterArtBusy} empty="Master carton artwork appears here." />
+                </div>
+              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button variant="cut" onClick={() => renderMasterArtwork()} disabled={masterArtBusy || !masterDieline || !concept}>
+                  {masterArtBusy ? "Placing artwork…" : masterArt ? "Regenerate carton artwork" : "Place artwork on carton dieline"}
+                </Button>
+                {masterArt && masterArtFinal && (
+                  <Button variant="outline" onClick={() => download(masterArt, `${masterDielineName || "master-carton"}-artwork.png`)}>
+                    PNG
+                  </Button>
+                )}
+              </div>
+            </div>
           </Step>
         </div>
       </main>
