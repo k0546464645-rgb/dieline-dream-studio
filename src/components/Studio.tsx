@@ -621,28 +621,30 @@ export function Studio({
           </Step>
 
           <Step n="05" title="Artwork on your dieline">
-            <div className="grid grid-cols-2 gap-3">
-              <label className="cursor-pointer">
-                <div className="bg-grid dash-cut flex aspect-square items-center justify-center overflow-hidden rounded-md bg-muted">
-                  {dieline ? (
-                    <img src={dieline} alt="Dieline" className="h-full w-full object-contain" />
-                  ) : (
-                    <p className="px-4 text-center font-mono text-xs text-muted-foreground">
-                      + dieline
-                      <br />
-                      PDF · AI · PNG · JPG
-                    </p>
-                  )}
-                </div>
-                <input
-                  type="file"
-                  accept=".pdf,.ai,.eps,image/png,image/jpeg"
-                  className="hidden"
-                  onChange={(e) => onDieline(e.target.files?.[0])}
-                />
-              </label>
-              <ImageSlot src={art} final={artFinal} loading={artBusy} empty="Flat artwork appears here." />
-            </div>
+            <label className="block cursor-pointer">
+              <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
+                {dieline ? (
+                  <img src={dieline} alt="Dieline" className="h-full w-full object-contain" />
+                ) : (
+                  <p className="px-4 text-center font-mono text-xs text-muted-foreground">
+                    + Add a dieline / layout
+                    <br />
+                    PDF · AI · PNG · JPG
+                  </p>
+                )}
+              </div>
+              <input
+                type="file"
+                accept=".pdf,.ai,.eps,image/png,image/jpeg"
+                className="hidden"
+                onChange={(e) => onDieline(e.target.files?.[0])}
+              />
+            </label>
+            {(art || artBusy) && (
+              <div className="mt-3">
+                <ImageSlot src={art} final={artFinal} loading={artBusy} empty="Flat artwork appears here." />
+              </div>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
               <Button variant="cut" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
                 {artBusy ? "Placing artwork…" : art ? "Regenerate artwork" : "Place artwork on dieline"}
