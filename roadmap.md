@@ -2,15 +2,17 @@
 - [x] Task choice after product upload (create concept / design from approved concept)
 - [x] Design board window to view concepts/design and choose direction
 - [x] Read uploaded dieline/artwork file to auto-fill info and extract style
-- [ ] Cloud backend + sign-in for 2 studio users
-- [ ] Projects (folders): product, supplier, concepts, approved design, dieline, final artwork
-- [ ] Style guide library (save generated guides, upload own guides e.g. licensed characters); chat asks which guide and offers directions
-- [ ] Approval workflow: concept → customer link (mark + approve/reject) → fixes → final artwork → purchasing/factory sign-off, with history
-- [ ] Send approval links: copy link, WhatsApp, WeChat (share/QR), email (needs own domain)
-- [ ] AI quality check of artwork vs info before sending
+- [x] Cloud backend + sign-in for 2 studio users
+- [x] Projects (folders): product, supplier, concepts, approved design, dieline, final artwork
+- [x] Style guide library (save generated guides, upload own guides e.g. licensed characters); chat asks which guide and offers directions
+- [x] Approval workflow: concept → customer link (mark + approve/reject) → fixes → final artwork → purchasing/factory sign-off, with history
+- [~] Send approval links: copy link, WhatsApp, WeChat (share/QR), email — done as share links/intents; fully automated sending needs a mail/WhatsApp service
+- [x] AI quality check of artwork vs info before sending
 - [x] Product info: separate windows for marketing text, instructions, scent, expiry date, Lot No, manufacturer, importer, made-in, grade — Hebrew + English
 - [x] Back panel: one field per info type (no combined fields), industry-standard layout order in artwork prompt
 - [x] Excel upload of multiple items (Disney toiletries sheet verified); pick an item to fill the form
+- [x] Chat works with or without a product photo (concept generation from written description only)
+- [x] Excel import available in step 01 (product upload stage) when there is no product photo
 - [ ] Project works across the item variety; AI learns the products
 - [ ] Design source choice per project: from style guide or AI-created; suggest combined packaging
 - [ ] Per-step chat box for comments + AI questions to the designer at each stage
