@@ -1,0 +1,1 @@
+ALTER TABLE public.projects ADD COLUMN project_type TEXT NOT NULL DEFAULT 'single';

@@ -78,6 +78,8 @@ export type StudioProject = {
   approved_concept: string;
   info: unknown;
   style_notes: string;
+  style_guide_id: string | null;
+  project_type: string;
   product_path: string | null;
 };
 export type StudioInstruction = { id: string; text: string; target: "concept" | "artwork" } | null;
@@ -93,9 +95,11 @@ export function Studio({
   instruction,
   onInstructionDone,
   onFilesChanged,
+  onStyleGuideChange,
 }: {
   project: StudioProject;
   styleGuide?: { text: string; images: string[] } | undefined;
+  onStyleGuideChange?: (id: string | null) => void;
   learnings?: string | undefined;
   instruction?: StudioInstruction;
   onInstructionDone?: () => void;
@@ -130,7 +134,10 @@ export function Studio({
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
   const concept = approved || lastAssistant;
   const options = approved ? [] : parseConcepts(lastAssistant);
-  const [task, setTask] = useState<"concept" | "ready" | null>(null);
+  const [task, setTask] = useState<"concept" | "ready" | "guide" | null>(null);
+  const [guidesList, setGuidesList] = useState<{ id: string; name: string; brand: string }[]>([]);
+  const [pendingGuide, setPendingGuide] = useState<string | null>(null);
+  const [conceptProjects, setConceptProjects] = useState<{ id: string; name: string; approved_concept: string }[]>([]);
   const [readyConcept, setReadyConcept] = useState("");
   const [refFile, setRefFile] = useState<File>();
   const [boardOpen, setBoardOpen] = useState(false);
@@ -266,6 +273,30 @@ export function Studio({
       true,
     );
   }
+
+  // Style-guide task: load the guide library once, and once the picked guide's
+  // context arrives from the project page, open the chat on it automatically.
+  useEffect(() => {
+    supabase
+      .from("style_guides")
+      .select("id,name,brand")
+      .order("name")
+      .then(({ data }) => setGuidesList(data ?? []));
+    supabase
+      .from("projects")
+      .select("id,name,approved_concept")
+      .neq("approved_concept", "")
+      .order("created_at", { ascending: false })
+      .then(({ data }) => setConceptProjects((data ?? []).filter((p) => p.id !== project.id)));
+  }, [project.id]);
+  useEffect(() => {
+    if (pendingGuide && styleGuide && project.style_guide_id === pendingGuide) {
+      setPendingGuide(null);
+      void send(
+        "I want to design using the attached style guide. First summarize its key rules in 2-3 lines; if it defines sub-styles or directions, ask me which one to use. Then propose 3 packaging concepts that strictly follow the guide.",
+      );
+    }
+  }, [pendingGuide, styleGuide, project.style_guide_id]);
 
   async function onProduct(f?: File) {
     if (!f) return;
@@ -517,7 +548,11 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                   }
                 }}
               />
-              <p className="text-xs text-muted-foreground">No photo? Upload an items list from Excel instead — picking an item fills the info form.</p>
+              <p className="text-xs text-muted-foreground">
+                {project.project_type && project.project_type !== "single"
+                  ? "Multi-item project — import the items list from Excel and pick an item to start; the info form fills automatically."
+                  : "No photo? Upload an items list from Excel instead — picking an item fills the info form."}
+              </p>
             </div>
             {product && (
               <div className="mt-5">
@@ -527,6 +562,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                     [
                       ["concept", "Create a concept", "Get several creative directions, style guides and visuals to choose from."],
                       ["ready", "Design from approved concept", "Already have a concept? Paste it and go straight to the design."],
+                      ["guide", "Concept from a style guide", "Design in the language of a saved brand / licensed character guide (Hello Kitty, Disney…)."],
                     ] as const
                   ).map(([k, t, d]) => (
                     <button
@@ -544,6 +580,26 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 </div>
                 {task === "ready" && !approved && (
                   <div className="mt-4 space-y-3">
+                    {conceptProjects.length > 0 && (
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const p = conceptProjects.find((x) => x.id === e.target.value);
+                          if (p) {
+                            setReadyConcept(p.approved_concept);
+                            toast.success(`Loaded the approved concept from "${p.name}"`);
+                          }
+                        }}
+                        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      >
+                        <option value="">…or pick an approved concept from another project</option>
+                        {conceptProjects.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                     <Textarea
                       value={readyConcept}
                       onChange={(e) => setReadyConcept(e.target.value)}
@@ -559,6 +615,38 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                         Design the product
                       </Button>
                     </div>
+                  </div>
+                )}
+                {task === "guide" && (
+                  <div className="mt-4 space-y-3">
+                    {guidesList.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        No style guides yet — save one in the style guide library (side menu) first.
+                      </p>
+                    ) : (
+                      <select
+                        value={pendingGuide ?? project.style_guide_id ?? ""}
+                        onChange={(e) => {
+                          const gid = e.target.value || null;
+                          if (!gid) return;
+                          setPendingGuide(gid);
+                          onStyleGuideChange?.(gid);
+                        }}
+                        className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+                      >
+                        <option value="">Choose a style guide…</option>
+                        {guidesList.map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.name}
+                            {g.brand ? ` — ${g.brand}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {pendingGuide && <p className="font-mono text-xs text-accent">Loading the guide — the chat will open on it in a moment…</p>}
+                    {!pendingGuide && project.style_guide_id && (
+                      <p className="text-xs text-muted-foreground">Guide attached — the chat will follow it and ask which sub-style to use.</p>
+                    )}
                   </div>
                 )}
               </div>

@@ -98,8 +98,8 @@ export function InfoForm({ value, onChange }: { value: PackInfo; onChange: (v: P
   const dir = RTL.has(value.language) ? "rtl" : "ltr";
   const set = (k: keyof PackInfo) => (e: { target: { value: string } }) => onChange({ ...value, [k]: e.target.value });
   const status = barcodeStatus(value.barcode);
-  const [baseOpen, setBaseOpen] = useState(true);
-  const [frontOpen, setFrontOpen] = useState(true);
+  const [baseOpen, setBaseOpen] = useState(false);
+  const [frontOpen, setFrontOpen] = useState(false);
   const [backOpen, setBackOpen] = useState(false);
   return (
     <div className="space-y-4">
