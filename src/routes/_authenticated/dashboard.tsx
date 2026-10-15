@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +18,8 @@ function Dashboard() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
+  const [renaming, setRenaming] = useState<{ id: string; name: string } | null>(null);
+  const qc = useQueryClient();
   const [form, setForm] = useState({ name: "", customer_name: "", customer_email: "", customer_phone: "", supplier: "", supplier_item: "", project_type: "single" });
 
   const { data } = useQuery({
@@ -78,7 +80,21 @@ function Dashboard() {
                 <span className="font-mono text-xs text-muted-foreground">no product yet</span>
               )}
             </div>
-            <h3 className="mt-3 font-semibold">{p.name}</h3>
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <h3 className="font-semibold">{p.name}</h3>
+              <button
+                aria-label="Rename project"
+                title="Rename · שינוי שם"
+                className="text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setRenaming({ id: p.id, name: p.name });
+                }}
+              >
+                ✏️
+              </button>
+            </div>
             <p className="text-sm text-muted-foreground">{[p.customer_name, p.supplier].filter(Boolean).join(" · ") || "—"}</p>
             <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
               <span className="rounded bg-secondary px-2 py-0.5">{stageLabel(p.stage)}</span>
@@ -132,6 +148,33 @@ function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      <Dialog open={!!renaming} onOpenChange={(o) => !o && setRenaming(null)}>
+        <DialogContent className="bg-background">
+          <DialogHeader>
+            <DialogTitle>Rename project · שינוי שם פרויקט</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-3">
+            <Input
+              autoFocus
+              value={renaming?.name ?? ""}
+              onChange={(e) => setRenaming((r) => (r ? { ...r, name: e.target.value } : r))}
+              onKeyDown={(e) => e.key === "Enter" && renameProject()}
+              className="bg-card"
+            />
+            <Button variant="cut" onClick={renameProject}>Save name</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </main>
   );
+
+  async function renameProject() {
+    if (!renaming) return;
+    const name = renaming.name.trim();
+    if (!name) return toast.error("Give the project a name");
+    const { error } = await supabase.from("projects").update({ name }).eq("id", renaming.id);
+    if (error) return toast.error(error.message);
+    setRenaming(null);
+    qc.invalidateQueries({ queryKey: ["projects"] });
+  }
 }
