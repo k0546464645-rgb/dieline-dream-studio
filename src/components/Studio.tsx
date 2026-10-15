@@ -193,12 +193,13 @@ export function Studio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instruction?.id]);
 
-  async function runQc() {
-    if (!art) return;
+  async function runQc(artSrc?: string) {
+    const src = artSrc ?? art;
+    if (!src) return;
     setQcBusy(true);
     setQc("");
     try {
-      await streamQc(art, info, concept, (d) => setQc((q) => q + d));
+      await streamQc(src, info, concept, (d) => setQc((q) => q + d));
       void logActivity(project.id, "AI quality check run on artwork", "qc");
     } catch (e) {
       toast.error((e as Error).message);
@@ -251,12 +252,22 @@ export function Studio({
   async function onProduct(f?: File) {
     if (!f) return;
     setProductFile(f);
-    setProduct(await fileToDataUrl(f));
+    const dataUrl = await fileToDataUrl(f);
+    setProduct(dataUrl);
     const path = await saveFile("product", f, f.name);
     if (path) await supabase.from("projects").update({ product_path: path }).eq("id", project.id);
+    // Semi-automatic flow: right after the photo lands, the AI asks the key questions
+    if (messages.length === 0) {
+      setTask("concept");
+      void send(
+        "I've just uploaded my product photo. Before designing, ask me the key questions in ONE short message: brand/product name, target audience, packaging type (blister / color box / display box / bottle label / other), and style direction. Do not propose concepts yet.",
+        false,
+        dataUrl,
+      );
+    }
   }
 
-  async function send(override?: string, approve = false) {
+  async function send(override?: string, approve = false, productImage?: string) {
     const text =
       override ||
       draft.trim() ||
@@ -268,7 +279,7 @@ export function Studio({
     setThinking(true);
     let full = "";
     try {
-      await streamConcept(next, product, { styleGuide, learnings }, (d) => {
+      await streamConcept(next, productImage ?? product, { styleGuide, learnings }, (d) => {
         full += d;
         setMessages((m) => {
           const c = [...m];
@@ -332,13 +343,19 @@ export function Studio({
       void saveFile("dieline", png, f.name);
       setDielineName(f.name.replace(/\.[^.]+$/, ""));
       setArt(undefined);
+      // Auto chain: a concept already exists → place artwork right away, no click needed
+      if (concept) {
+        toast.message("Concept found — placing artwork on the dieline automatically");
+        void renderArtwork(undefined, png);
+      }
     } catch (e) {
       toast.error((e as Error).message);
     }
   }
 
-  async function renderArtwork(extra?: string) {
-    if (!dieline || !concept) {
+  async function renderArtwork(extra?: string, dielineOverride?: string) {
+    const dl = dielineOverride ?? dieline;
+    if (!dl || !concept) {
       toast.error("Upload a dieline and create a concept first");
       return;
     }
@@ -350,13 +367,17 @@ export function Studio({
       "prompt",
       `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
-    form.append("image[]", await dataUrlToFile(dieline, "dieline.png"));
+    form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
     if (mockup && mockupFinal) form.append("image[]", await dataUrlToFile(mockup, "mockup.png"));
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setArt(src);
         setArtFinal(fin);
-        if (fin) void saveFile("artwork", src, extra ? "Artwork (revised)" : "Artwork");
+        if (fin) {
+          void saveFile("artwork", src, extra ? "Artwork (revised)" : "Artwork");
+          // Auto chain: run AI quality control as soon as the artwork is ready
+          void runQc(src);
+        }
       }, undefined, await authHeaders());
     } catch (e) {
       toast.error((e as Error).message);
@@ -604,7 +625,7 @@ export function Studio({
               <div className="mt-4 rounded-md border bg-background p-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-mono text-[11px] uppercase tracking-wider text-accent">AI quality control</p>
-                  <Button size="sm" variant="outline" onClick={runQc} disabled={qcBusy}>
+                  <Button size="sm" variant="outline" onClick={() => runQc()} disabled={qcBusy}>
                     {qcBusy ? "Checking…" : qc ? "Check again" : "Run quality check"}
                   </Button>
                 </div>

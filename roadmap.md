@@ -1,4 +1,8 @@
 # Roadmap
+- [x] UI redesign: dark studio console theme, fixed sidebar nav, new landing page (verified live)
+- [~] Streamline & automate workflow steps: auto chain dieline→artwork→QC implemented; concept→mockup already auto
+- [x] After product photo upload: AI automatically asks the right questions (verified live end-to-end)
+- [ ] More automation in the same spirit (user: "ועוד דברים בכיוון הזה")
 - [x] Task choice after product upload (create concept / design from approved concept)
 - [x] Design board window to view concepts/design and choose direction
 - [x] Read uploaded dieline/artwork file to auto-fill info and extract style
