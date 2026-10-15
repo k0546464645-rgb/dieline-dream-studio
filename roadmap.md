@@ -35,3 +35,4 @@
 - [x] Concept stage: third task option — create concept from a brand/customer style guide (verified live)
 - [ ] New project: choose type — single product / multiple products / series / collection
 - [ ] Product Information panels always collapsed by default (designer expands on click)
+- [ ] Rename project: from dashboard card and from project page header
