@@ -16,6 +16,17 @@ export const emptyInfo: PackInfo = {
   ingredients: "",
   warnings: "",
   extra: "",
+  marketingHe: "",
+  marketingEn: "",
+  instructionsHe: "",
+  instructionsEn: "",
+  scent: "",
+  expiry: "",
+  lotNo: "",
+  manufacturer: "",
+  importer: "",
+  madeIn: "",
+  grade: "",
 };
 
 export function infoPrompt(i: PackInfo) {
@@ -25,8 +36,20 @@ export function infoPrompt(i: PackInfo) {
     i.description && `Back panel – product description: ${i.description}`,
     i.ingredients && `Back panel – ingredients list (small, legible, boxed): ${i.ingredients}`,
     i.warnings && `Back panel – safety & warnings (with a warning heading): ${i.warnings}`,
+    i.marketingHe && `Back panel – marketing text (Hebrew): ${i.marketingHe}`,
+    i.marketingEn && `Back panel – marketing text (English): ${i.marketingEn}`,
+    i.instructionsHe && `Back panel – usage instructions (Hebrew): ${i.instructionsHe}`,
+    i.instructionsEn && `Back panel – usage instructions (English): ${i.instructionsEn}`,
+    i.scent && `Back panel – scent: ${i.scent}`,
+    i.expiry && `Back panel – expiry / PAO: ${i.expiry}`,
+    i.lotNo && `Back panel – lot number: ${i.lotNo}`,
+    i.manufacturer && `Back panel – manufacturer details: ${i.manufacturer}`,
+    i.importer && `Back panel – importer details: ${i.importer}`,
+    i.madeIn && `Back panel – made in: ${i.madeIn}`,
+    i.grade && `Back panel – grade: ${i.grade}`,
     i.itemNumber && `Back panel – item number: ${i.itemNumber}`,
     i.extra && `Other info (side or back): ${i.extra}`,
+    "BACK PANEL ORDER (industry standard, each in its own clearly separated block — never merge two info types into one block): 1) marketing/description, 2) usage instructions, 3) warnings, 4) ingredients, 5) legal block (manufacturer, importer, made in, grade), 6) batch line (lot no., expiry) next to the barcode at the bottom. Bilingual texts appear Hebrew first, then English below it.",
     i.barcode && `Leave an empty white rectangle on the back panel bottom for the barcode ${i.barcode}; do not draw bars.`,
   ];
   return parts.filter(Boolean).join("\n");
