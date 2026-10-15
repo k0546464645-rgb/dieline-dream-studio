@@ -29,11 +29,16 @@ function colKind(cell: string): string | null {
   return null;
 }
 
-function splitManufacturer(block: string): { manufacturer: string; importer: string } {
+function splitManufacturer(block: string): { manufacturer: string; importer: string; grade: string; madeIn: string } {
   const lines = block.split(/\n|<br\s*\/?>/i).map((l) => l.trim()).filter(Boolean);
-  const mfr = lines.filter((l) => /יצרן|manufacturer/i.test(l));
-  const rest = lines.filter((l) => !/יצרן|manufacturer/i.test(l));
-  return { manufacturer: mfr.join("\n"), importer: rest.join("\n") };
+  const pick = (re: RegExp) => lines.filter((l) => re.test(l));
+  const mfr = pick(/יצרן|manufacturer/i);
+  const grade = pick(/סוג [א-ת']|grade/i);
+  const madeInLines = pick(/תוצרת|made in/i);
+  const madeIn = madeInLines.map((l) => l.replace(/.*תוצרת\s*/i, "").replace(/.*made in\s*/i, "").trim());
+  const taken = new Set([...mfr, ...grade, ...madeInLines]);
+  const rest = lines.filter((l) => !taken.has(l));
+  return { manufacturer: mfr.join("\n"), importer: rest.join("\n"), grade: grade.join(" "), madeIn: madeIn.join(" ") };
 }
 
 /** Parses an .xlsx/.csv items sheet (two-row EN/HE headers like the toiletries template). */
