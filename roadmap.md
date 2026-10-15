@@ -29,8 +29,7 @@
 - [x] Step 05: master carton (קרטון הובלה) dieline upload + artwork render
 - [ ] Licensee section in style-guide storage with licensed materials
 - [ ] Semi-automatic flow: machine manages process, minimal designer effort
-- [~] Upload ZIP/RAR archives + plain folders (verified live); add multi-select for files and multiple archives at once
-- [ ] Concept stage: third task option — create concept from a brand/customer style guide
+- [x] Upload ZIP/RAR archives + plain folders: multi-select files/archives, drop anywhere on Folder tab (verified live); per-file delete + download buttons
 - [x] "Design from approved concept": allow picking an approved concept from another project (hidden until another project has a saved approved concept)
 - [x] Concept stage: third task option — create concept from a brand/customer style guide (verified live)
 - [x] New project: choose type — single product / multiple products / series / collection (verified live)
