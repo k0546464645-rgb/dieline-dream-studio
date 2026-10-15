@@ -25,6 +25,7 @@
 - [x] Step 05: single window for adding dielines (verified live)
 - [x] Info form: collapsible product-info / front-panel / back-panel windows (verified live)
 - [ ] Product image + label upload for decorating the product itself (e.g. bottle)
-- [ ] Master carton artwork: design first, later match supplier layout; final artwork fitted on supplier dieline
+- [~] Master carton artwork: step 05 now has a shipping-carton dieline slot with auto artwork placement (barcode box, qty, handling marks, legal line); supplier-layout matching flow still basic
+- [x] Step 05: master carton (קרטון הובלה) dieline upload + artwork render
 - [ ] Licensee section in style-guide storage with licensed materials
 - [ ] Semi-automatic flow: machine manages process, minimal designer effort
