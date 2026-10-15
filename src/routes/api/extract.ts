@@ -5,7 +5,11 @@ const str = { type: "string" };
 const SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["language", "barcode", "itemNumber", "productName", "description", "ingredients", "warnings", "extra", "styleNotes"],
+  required: [
+    "language", "barcode", "itemNumber", "productName", "description", "ingredients", "warnings", "extra",
+    "marketingHe", "marketingEn", "instructionsHe", "instructionsEn", "scent", "expiry", "lotNo",
+    "manufacturer", "importer", "madeIn", "grade", "styleNotes",
+  ],
   properties: {
     language: { type: "string", description: "Main language of the text: Hebrew, English, Arabic, Russian, French, Spanish or German" },
     barcode: { type: "string", description: "Digits under the barcode, or empty" },
@@ -14,7 +18,18 @@ const SCHEMA = {
     description: str,
     ingredients: str,
     warnings: { type: "string", description: "Safety, warning, allergy and caution texts" },
-    extra: { type: "string", description: "Other info: manufacturer, importer, storage, net weight, dates, nutrition" },
+    extra: { type: "string", description: "Other info: storage conditions, net weight, volume, nutrition" },
+    marketingHe: { type: "string", description: "Marketing/selling text in Hebrew, exactly as printed" },
+    marketingEn: { type: "string", description: "Marketing/selling text in English, exactly as printed" },
+    instructionsHe: { type: "string", description: "Usage instructions in Hebrew, exactly as printed" },
+    instructionsEn: { type: "string", description: "Usage instructions in English, exactly as printed" },
+    scent: { type: "string", description: "Scent/fragrance name, e.g. Apple / תפוח" },
+    expiry: { type: "string", description: "Expiry or period-after-opening, e.g. 24 months" },
+    lotNo: { type: "string", description: "Lot / batch number" },
+    manufacturer: { type: "string", description: "Manufacturer name and details" },
+    importer: { type: "string", description: "Importer, marketer and distributor details" },
+    madeIn: { type: "string", description: "Country of origin" },
+    grade: { type: "string", description: "Product grade/type, e.g. סוג א׳ / Grade A" },
     styleNotes: { type: "string", description: "Visual style guide: logo description and placement, fonts/typefaces, colors with hex, imagery, layout per panel" },
   },
 };

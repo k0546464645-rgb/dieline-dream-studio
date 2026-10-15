@@ -8,3 +8,13 @@
 - [ ] Approval workflow: concept → customer link (mark + approve/reject) → fixes → final artwork → purchasing/factory sign-off, with history
 - [ ] Send approval links: copy link, WhatsApp, WeChat (share/QR), email (needs own domain)
 - [ ] AI quality check of artwork vs info before sending
+- [ ] Product info: separate windows for marketing text, instructions, scent, expiry date, Lot No, manufacturer, importer, made-in, grade — Hebrew + English
+- [ ] Back panel: one field per info type (no combined fields), industry-standard layout suggestion
+- [ ] Excel upload of multiple items (e.g. Disney toiletries sheet); project works across the variety; AI learns the products
+- [ ] Design source choice per project: from style guide or AI-created; suggest combined packaging
+- [ ] Per-step chat box for comments + AI questions to the designer at each stage
+- [ ] Packaging presentation options: blister, color box, display box, product on store shelf
+- [ ] Product image + label upload for decorating the product itself (e.g. bottle)
+- [ ] Master carton artwork: design first, later match supplier layout; final artwork fitted on supplier dieline
+- [ ] Licensee section in style-guide storage with licensed materials
+- [ ] Semi-automatic flow: machine manages process, minimal designer effort

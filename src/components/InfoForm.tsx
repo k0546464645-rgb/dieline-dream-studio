@@ -16,6 +16,17 @@ export const emptyInfo: PackInfo = {
   ingredients: "",
   warnings: "",
   extra: "",
+  marketingHe: "",
+  marketingEn: "",
+  instructionsHe: "",
+  instructionsEn: "",
+  scent: "",
+  expiry: "",
+  lotNo: "",
+  manufacturer: "",
+  importer: "",
+  madeIn: "",
+  grade: "",
 };
 
 export function infoPrompt(i: PackInfo) {
@@ -25,8 +36,20 @@ export function infoPrompt(i: PackInfo) {
     i.description && `Back panel – product description: ${i.description}`,
     i.ingredients && `Back panel – ingredients list (small, legible, boxed): ${i.ingredients}`,
     i.warnings && `Back panel – safety & warnings (with a warning heading): ${i.warnings}`,
+    i.marketingHe && `Back panel – marketing text (Hebrew): ${i.marketingHe}`,
+    i.marketingEn && `Back panel – marketing text (English): ${i.marketingEn}`,
+    i.instructionsHe && `Back panel – usage instructions (Hebrew): ${i.instructionsHe}`,
+    i.instructionsEn && `Back panel – usage instructions (English): ${i.instructionsEn}`,
+    i.scent && `Back panel – scent: ${i.scent}`,
+    i.expiry && `Back panel – expiry / PAO: ${i.expiry}`,
+    i.lotNo && `Back panel – lot number: ${i.lotNo}`,
+    i.manufacturer && `Back panel – manufacturer details: ${i.manufacturer}`,
+    i.importer && `Back panel – importer details: ${i.importer}`,
+    i.madeIn && `Back panel – made in: ${i.madeIn}`,
+    i.grade && `Back panel – grade: ${i.grade}`,
     i.itemNumber && `Back panel – item number: ${i.itemNumber}`,
     i.extra && `Other info (side or back): ${i.extra}`,
+    "BACK PANEL ORDER (industry standard, each in its own clearly separated block — never merge two info types into one block): 1) marketing/description, 2) usage instructions, 3) warnings, 4) ingredients, 5) legal block (manufacturer, importer, made in, grade), 6) batch line (lot no., expiry) next to the barcode at the bottom. Bilingual texts appear Hebrew first, then English below it.",
     i.barcode && `Leave an empty white rectangle on the back panel bottom for the barcode ${i.barcode}; do not draw bars.`,
   ];
   return parts.filter(Boolean).join("\n");
@@ -78,6 +101,27 @@ export function InfoForm({ value, onChange }: { value: PackInfo; onChange: (v: P
         <Textarea dir={dir} value={value.description} onChange={set("description")} className="min-h-20 bg-background" />
       </div>
       <div className="dash-cut space-y-4 rounded-md p-3">
+        <p className="font-mono text-[11px] uppercase tracking-wider text-accent">Back panel · marketing & instructions</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Marketing text (עברית)</Label>
+            <Textarea dir="rtl" value={value.marketingHe} onChange={set("marketingHe")} className="min-h-20 bg-background" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Marketing text (English)</Label>
+            <Textarea dir="ltr" value={value.marketingEn} onChange={set("marketingEn")} className="min-h-20 bg-background" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Usage instructions (עברית)</Label>
+            <Textarea dir="rtl" value={value.instructionsHe} onChange={set("instructionsHe")} className="min-h-20 bg-background" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Usage instructions (English)</Label>
+            <Textarea dir="ltr" value={value.instructionsEn} onChange={set("instructionsEn")} className="min-h-20 bg-background" />
+          </div>
+        </div>
+      </div>
+      <div className="dash-cut space-y-4 rounded-md p-3">
         <p className="font-mono text-[11px] uppercase tracking-wider text-accent">Back panel · ingredients & warnings</p>
         <div className="space-y-1.5">
           <Label>Ingredients</Label>
@@ -87,8 +131,41 @@ export function InfoForm({ value, onChange }: { value: PackInfo; onChange: (v: P
           <Label>Safety & warnings</Label>
           <Textarea dir={dir} value={value.warnings} onChange={set("warnings")} className="min-h-20 bg-background" />
         </div>
+      </div>
+      <div className="dash-cut space-y-4 rounded-md p-3">
+        <p className="font-mono text-[11px] uppercase tracking-wider text-accent">Back panel · product & legal details</p>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <Label>Scent / בושם</Label>
+            <Input dir={dir} value={value.scent} onChange={set("scent")} className="bg-background" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Expiry / תוקף</Label>
+            <Input dir={dir} value={value.expiry} onChange={set("expiry")} className="bg-background" placeholder="e.g. 24 months from opening" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Lot No / מספר סדרה</Label>
+            <Input value={value.lotNo} onChange={set("lotNo")} className="bg-background font-mono" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Made in / ארץ ייצור</Label>
+            <Input dir={dir} value={value.madeIn} onChange={set("madeIn")} className="bg-background" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Grade / סוג</Label>
+            <Input dir={dir} value={value.grade} onChange={set("grade")} className="bg-background" placeholder="e.g. סוג א׳ / Grade A" />
+          </div>
+        </div>
         <div className="space-y-1.5">
-          <Label>Other (manufacturer, storage, net weight…)</Label>
+          <Label>Manufacturer details / יצרן</Label>
+          <Textarea dir={dir} value={value.manufacturer} onChange={set("manufacturer")} className="min-h-16 bg-background" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Importer & distributor details / יבואן ומשווק</Label>
+          <Textarea dir={dir} value={value.importer} onChange={set("importer")} className="min-h-16 bg-background" />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Other (storage, net weight, volume…)</Label>
           <Textarea dir={dir} value={value.extra} onChange={set("extra")} className="min-h-16 bg-background" />
         </div>
       </div>
