@@ -33,6 +33,7 @@
 - [ ] Concept stage: third task option — create concept from a brand/customer style guide
 - [x] "Design from approved concept": allow picking an approved concept from another project (hidden until another project has a saved approved concept)
 - [x] Concept stage: third task option — create concept from a brand/customer style guide (verified live)
-- [ ] New project: choose type — single product / multiple products / series / collection
+- [~] New project: choose type — single product / multiple products / series / collection
+- [ ] Collection/series: manage each product separately (own comments) + combined collection view of all items together
 - [ ] Product Information panels always collapsed by default (designer expands on click)
 - [x] Rename project: exists in Details tab; added quick-rename pencil on dashboard cards
