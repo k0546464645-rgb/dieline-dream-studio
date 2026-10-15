@@ -33,8 +33,8 @@
 - [ ] Concept stage: third task option — create concept from a brand/customer style guide
 - [x] "Design from approved concept": allow picking an approved concept from another project (hidden until another project has a saved approved concept)
 - [x] Concept stage: third task option — create concept from a brand/customer style guide (verified live)
-- [~] New project: choose type — single product / multiple products / series / collection
-- [~] Collection/series: manage each product separately (own comments) + combined collection view of all items together
-- [ ] Delete option for project files in the Folder tab
-- [ ] Product Information panels always collapsed by default (designer expands on click)
+- [x] New project: choose type — single product / multiple products / series / collection (verified live)
+- [~] Collection/series: Items tab per non-single project (add/Excel import, per-item image+info+comments, collection view) — built, browser verification pending
+- [x] Delete + download option for project files in the Folder tab (delete verified live)
+- [x] Product Information panels always collapsed by default (verified live)
 - [x] Rename project: exists in Details tab; added quick-rename pencil on dashboard cards
