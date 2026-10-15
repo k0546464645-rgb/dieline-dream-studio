@@ -193,12 +193,13 @@ export function Studio({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [instruction?.id]);
 
-  async function runQc() {
-    if (!art) return;
+  async function runQc(artSrc?: string) {
+    const src = artSrc ?? art;
+    if (!src) return;
     setQcBusy(true);
     setQc("");
     try {
-      await streamQc(art, info, concept, (d) => setQc((q) => q + d));
+      await streamQc(src, info, concept, (d) => setQc((q) => q + d));
       void logActivity(project.id, "AI quality check run on artwork", "qc");
     } catch (e) {
       toast.error((e as Error).message);
@@ -251,12 +252,22 @@ export function Studio({
   async function onProduct(f?: File) {
     if (!f) return;
     setProductFile(f);
-    setProduct(await fileToDataUrl(f));
+    const dataUrl = await fileToDataUrl(f);
+    setProduct(dataUrl);
     const path = await saveFile("product", f, f.name);
     if (path) await supabase.from("projects").update({ product_path: path }).eq("id", project.id);
+    // Semi-automatic flow: right after the photo lands, the AI asks the key questions
+    if (messages.length === 0) {
+      setTask("concept");
+      void send(
+        "I've just uploaded my product photo. Before designing, ask me the key questions in ONE short message: brand/product name, target audience, packaging type (blister / color box / display box / bottle label / other), and style direction. Do not propose concepts yet.",
+        false,
+        dataUrl,
+      );
+    }
   }
 
-  async function send(override?: string, approve = false) {
+  async function send(override?: string, approve = false, productImage?: string) {
     const text =
       override ||
       draft.trim() ||
@@ -268,7 +279,7 @@ export function Studio({
     setThinking(true);
     let full = "";
     try {
-      await streamConcept(next, product, { styleGuide, learnings }, (d) => {
+      await streamConcept(next, productImage ?? product, { styleGuide, learnings }, (d) => {
         full += d;
         setMessages((m) => {
           const c = [...m];
@@ -332,13 +343,19 @@ export function Studio({
       void saveFile("dieline", png, f.name);
       setDielineName(f.name.replace(/\.[^.]+$/, ""));
       setArt(undefined);
+      // Auto chain: a concept already exists → place artwork right away, no click needed
+      if (concept) {
+        toast.message("Concept found — placing artwork on the dieline automatically");
+        void renderArtwork(undefined, png);
+      }
     } catch (e) {
       toast.error((e as Error).message);
     }
   }
 
-  async function renderArtwork(extra?: string) {
-    if (!dieline || !concept) {
+  async function renderArtwork(extra?: string, dielineOverride?: string) {
+    const dl = dielineOverride ?? dieline;
+    if (!dl || !concept) {
       toast.error("Upload a dieline and create a concept first");
       return;
     }
