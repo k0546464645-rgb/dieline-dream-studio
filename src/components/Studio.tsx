@@ -99,9 +99,10 @@ export function Studio({
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
 
-  const [mockup, setMockup] = useState<string>();
-  const [mockupFinal, setMockupFinal] = useState(false);
-  const [mockBusy, setMockBusy] = useState(false);
+  const [mockups, setMockups] = useState<{ front?: string; back?: string }>({});
+  const [mockFinal, setMockFinal] = useState<{ front?: boolean; back?: boolean }>({});
+  const [mockBusy, setMockBusy] = useState<"front" | "back" | null>(null);
+  const [packType, setPackType] = useState("window");
 
   const [dieline, setDieline] = useState<string>();
   const [dielineName, setDielineName] = useState("");
@@ -152,12 +153,13 @@ export function Studio({
         .from("project_files")
         .select("kind,path,label,created_at")
         .eq("project_id", project.id)
-        .in("kind", ["dieline", "mockup", "artwork"])
+        .in("kind", ["dieline", "mockup", "mockup-back", "artwork"])
         .order("created_at", { ascending: false });
       const latest = (k: string) => data?.find((d) => d.kind === k);
-      const d = latest("dieline"), m = latest("mockup"), a = latest("artwork");
+      const d = latest("dieline"), m = latest("mockup"), mb = latest("mockup-back"), a = latest("artwork");
       if (d) { setDieline(await urlToDataUrl(await signedUrl(d.path))); setDielineName(d.label || "dieline"); }
-      if (m) { setMockup(await urlToDataUrl(await signedUrl(m.path))); setMockupFinal(true); }
+      if (m) { const s = await urlToDataUrl(await signedUrl(m.path)); setMockups((x) => ({ ...x, front: s })); setMockFinal((x) => ({ ...x, front: true })); }
+      if (mb) { const s = await urlToDataUrl(await signedUrl(mb.path)); setMockups((x) => ({ ...x, back: s })); setMockFinal((x) => ({ ...x, back: true })); }
       if (a) { setArt(await urlToDataUrl(await signedUrl(a.path))); setArtFinal(true); }
       loaded.current = true;
     })().catch(() => (loaded.current = true));
@@ -305,32 +307,33 @@ export function Studio({
     }
   }
 
-  async function renderMockup(conceptText?: string) {
+  async function renderMockup(view: "front" | "back" = "front", conceptText?: string) {
     const concept = conceptText || approved || lastAssistant;
     if (!productFile || !concept) {
       toast.error("Upload a product and create a concept first");
       return;
     }
-    setMockBusy(true);
-    setMockup(undefined);
-    setMockupFinal(false);
+    setMockBusy(view);
+    setMockups((m) => ({ ...m, [view]: undefined }));
+    setMockFinal((f) => ({ ...f, [view]: false }));
+    const pack = PACK_TYPES.find(([k]) => k === packType);
     const form = new FormData();
     form.append(
       "prompt",
-      `Photorealistic 3D studio product render of THIS exact product (keep its real shape, proportions, material and structure) with new packaging graphics applied according to this design concept. Three-quarter view, soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.${styleNotes ? `\n\nEXISTING BRAND STYLE (logo, fonts, imagery to reuse):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
+      `Photorealistic 3D studio render of THIS exact product (keep its real shape, proportions, material and structure) ${pack ? pack[2] : "with new packaging graphics applied"} according to this design concept. ${view === "front" ? "Straight-on FRONT view: show the front panel design clearly, centered." : "Straight-on BACK view: show the back panel with its full information layout (text blocks, barcode area)."} Soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.${styleNotes ? `\n\nEXISTING BRAND STYLE (logo, fonts, imagery to reuse):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
     );
     form.append("image[]", productFile);
     if (refFile) form.append("image[]", refFile);
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
-        setMockup(src);
-        setMockupFinal(fin);
-        if (fin) void saveFile("mockup", src, "3D design");
+        setMockups((m) => ({ ...m, [view]: src }));
+        setMockFinal((f) => ({ ...f, [view]: fin }));
+        if (fin) void saveFile(view === "front" ? "mockup" : "mockup-back", src, view === "front" ? "3D design — front" : "3D design — back");
       }, undefined, await authHeaders());
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
-      setMockBusy(false);
+      setMockBusy(null);
     }
   }
 
