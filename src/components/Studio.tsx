@@ -376,7 +376,7 @@ export function Studio({
     const form = new FormData();
     form.append(
       "prompt",
-      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockups.front ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
     form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
     if (mockups.front && mockFinal.front) form.append("image[]", await dataUrlToFile(mockups.front, "mockup.png"));
@@ -576,21 +576,47 @@ export function Studio({
 
         <div className="flex flex-col gap-6">
           <Step n="04" title="3D mockup">
-            <ImageSlot
-              src={mockup}
-              final={mockupFinal}
-              loading={mockBusy}
-              empty="Your product rendered with the new concept appears here."
-            />
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="cut" onClick={() => renderMockup()} disabled={mockBusy || !concept || !productFile}>
-                {mockBusy ? "Rendering…" : mockup ? "Re-render mockup" : "Render 3D mockup"}
-              </Button>
-              {mockup && mockupFinal && (
-                <Button variant="outline" onClick={() => download(mockup, "mockup.png")}>
-                  Download PNG
-                </Button>
-              )}
+            <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Packaging type</p>
+            <div className="mb-4 flex flex-wrap gap-2">
+              {PACK_TYPES.map(([k, label]) => (
+                <button
+                  key={k}
+                  onClick={() => setPackType(k)}
+                  className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${packType === k ? "border-accent bg-background text-accent ring-1 ring-accent" : "text-muted-foreground hover:border-foreground hover:text-foreground"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {(["front", "back"] as const).map((view) => (
+                <div key={view}>
+                  <ImageSlot
+                    src={mockups[view]}
+                    final={mockFinal[view]}
+                    loading={mockBusy === view}
+                    empty={view === "front" ? "Front view" : "Back view"}
+                  />
+                  <p className="mt-1.5 text-center font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+                    {view === "front" ? "Front · קדימה" : "Back · אחורה"}
+                  </p>
+                  <div className="mt-2 flex justify-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="cut"
+                      onClick={() => renderMockup(view)}
+                      disabled={mockBusy !== null || !concept || !productFile}
+                    >
+                      {mockBusy === view ? "…" : mockups[view] ? "Re-render" : "Render"}
+                    </Button>
+                    {mockups[view] && mockFinal[view] && (
+                      <Button size="sm" variant="outline" onClick={() => download(mockups[view]!, `mockup-${view}.png`)}>
+                        PNG
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
           </Step>
 
