@@ -44,12 +44,13 @@ function splitManufacturer(block: string): { manufacturer: string; importer: str
 /** Parses an .xlsx/.csv items sheet (two-row EN/HE headers like the toiletries template). */
 export async function parseItemsFile(file: File): Promise<ImportedItem[]> {
   const wb = XLSX.read(await file.arrayBuffer(), { type: "array" });
-  const ws = wb.Sheets[wb.SheetNames[0]];
+  const ws = wb.Sheets[wb.SheetNames[0] ?? ""];
+  if (!ws) return [];
   const rows = XLSX.utils.sheet_to_json<unknown[]>(ws, { header: 1, defval: "" });
   if (!rows.length) return [];
 
   // Header may span two rows (English row + Hebrew row); map each column by either.
-  const h1 = rows[0].map(norm);
+  const h1 = (rows[0] ?? []).map(norm);
   const h2 = (rows[1] ?? []).map(norm);
   const kinds = h1.map((c, i) => colKind(c) ?? colKind(h2[i] ?? ""));
   if (!kinds.some(Boolean)) return [];
