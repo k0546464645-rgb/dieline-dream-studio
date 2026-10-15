@@ -118,6 +118,11 @@ export function Studio({
   const [artFinal, setArtFinal] = useState(false);
   const [artBusy, setArtBusy] = useState(false);
   const [svgBusy, setSvgBusy] = useState(false);
+  const [masterDieline, setMasterDieline] = useState<string>();
+  const [masterDielineName, setMasterDielineName] = useState("");
+  const [masterArt, setMasterArt] = useState<string>();
+  const [masterArtFinal, setMasterArtFinal] = useState(false);
+  const [masterArtBusy, setMasterArtBusy] = useState(false);
 
   const [approved, setApproved] = useState<string>(project.approved_concept ?? "");
   const [info, setInfo] = useState<PackInfo>({ ...emptyInfo, ...((project.info as Partial<PackInfo>) ?? {}) });
@@ -161,7 +166,7 @@ export function Studio({
         .from("project_files")
         .select("kind,path,label,created_at")
         .eq("project_id", project.id)
-        .in("kind", ["dieline", "mockup", "mockup-back", "artwork"])
+        .in("kind", ["dieline", "mockup", "mockup-back", "artwork", "dieline-master", "artwork-master"])
         .order("created_at", { ascending: false });
       const latest = (k: string) => data?.find((d) => d.kind === k);
       const d = latest("dieline"), m = latest("mockup"), mb = latest("mockup-back"), a = latest("artwork");
@@ -169,6 +174,9 @@ export function Studio({
       if (m) { const s = await urlToDataUrl(await signedUrl(m.path)); setMockups((x) => ({ ...x, front: s })); setMockFinal((x) => ({ ...x, front: true })); }
       if (mb) { const s = await urlToDataUrl(await signedUrl(mb.path)); setMockups((x) => ({ ...x, back: s })); setMockFinal((x) => ({ ...x, back: true })); }
       if (a) { setArt(await urlToDataUrl(await signedUrl(a.path))); setArtFinal(true); }
+      const dm = latest("dieline-master"), am = latest("artwork-master");
+      if (dm) { setMasterDieline(await urlToDataUrl(await signedUrl(dm.path))); setMasterDielineName(dm.label || "master carton"); }
+      if (am) { setMasterArt(await urlToDataUrl(await signedUrl(am.path))); setMasterArtFinal(true); }
       loaded.current = true;
     })().catch(() => (loaded.current = true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
