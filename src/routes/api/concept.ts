@@ -40,6 +40,9 @@ STYLE GUIDE:\n${styleGuide.text.slice(0, 6000)}`;
         if (!Array.isArray(messages) || messages.length === 0) {
           return new Response("No messages", { status: 400 });
         }
+        if (!productImage) {
+          instructions += `\n\nNO product photo was provided in this session. Do not describe or assume a specific photo — design from the user's written description. If the product type or category is unclear, ask one short clarifying question before proposing concepts.`;
+        }
         const input = messages.map((m, i) => {
           if (m.role === "assistant") {
             return { role: "assistant", content: [{ type: "output_text", text: m.text }] };
