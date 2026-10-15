@@ -751,6 +751,45 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
               The SVG has layers for Artwork, Dieline (multiply), a real vector EAN-13 barcode and a hidden Editable Text layer with your info. Open it in
               Illustrator with File › Open.
             </p>
+            <div className="mt-5 border-t pt-4">
+              <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">
+                Shipping carton dieline · פריסת קרטון הובלה
+              </p>
+              <label className="block cursor-pointer">
+                <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
+                  {masterDieline ? (
+                    <img src={masterDieline} alt="Master carton dieline" className="h-full w-full object-contain" />
+                  ) : (
+                    <p className="px-4 text-center font-mono text-xs text-muted-foreground">
+                      + Add a master carton dieline / layout
+                      <br />
+                      PDF · AI · PNG · JPG
+                    </p>
+                  )}
+                </div>
+                <input
+                  type="file"
+                  accept=".pdf,.ai,.eps,image/png,image/jpeg"
+                  className="hidden"
+                  onChange={(e) => onMasterDieline(e.target.files?.[0])}
+                />
+              </label>
+              {(masterArt || masterArtBusy) && (
+                <div className="mt-3">
+                  <ImageSlot src={masterArt} final={masterArtFinal} loading={masterArtBusy} empty="Master carton artwork appears here." />
+                </div>
+              )}
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Button variant="cut" onClick={() => renderMasterArtwork()} disabled={masterArtBusy || !masterDieline || !concept}>
+                  {masterArtBusy ? "Placing artwork…" : masterArt ? "Regenerate carton artwork" : "Place artwork on carton dieline"}
+                </Button>
+                {masterArt && masterArtFinal && (
+                  <Button variant="outline" onClick={() => download(masterArt, `${masterDielineName || "master-carton"}-artwork.png`)}>
+                    PNG
+                  </Button>
+                )}
+              </div>
+            </div>
           </Step>
         </div>
       </main>
