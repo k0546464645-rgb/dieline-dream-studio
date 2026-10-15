@@ -405,6 +405,53 @@ export function Studio({
     }
   }
 
+  async function onMasterDieline(f?: File) {
+    if (!f) return;
+    try {
+      const png = await dielineToPng(f);
+      setMasterDieline(png);
+      void saveFile("dieline-master", png, f.name);
+      setMasterDielineName(f.name.replace(/\.[^.]+$/, ""));
+      setMasterArt(undefined);
+      if (concept) {
+        toast.message("Concept found — placing master carton artwork automatically");
+        void renderMasterArtwork(png);
+      }
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  }
+
+  async function renderMasterArtwork(dielineOverride?: string) {
+    const dl = dielineOverride ?? masterDieline;
+    if (!dl || !concept) {
+      toast.error("Upload a master carton dieline and create a concept first");
+      return;
+    }
+    setMasterArtBusy(true);
+    setMasterArt(undefined);
+    setMasterArtFinal(false);
+    const form = new FormData();
+    form.append(
+      "prompt",
+      `The first image is a flat SHIPPING MASTER CARTON dieline (cut and fold template). Fill every panel of this exact dieline with flat, print-ready master carton artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.
+
+LAYOUT RULE: master carton artwork is industrial and clear — main panels carry the brand and product name large, item number, quantity per carton (e.g. "24 units · יחידות"), gross/net weight, carton dimensions, a white barcode/shipping-label box, and standard handling marks (fragile, keep dry, this way up, stacking limit) drawn as simple line icons. Legal line: manufacturer, importer, made in. Hebrew and English where provided.${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}\n\n${infoPrompt(info)}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+    );
+    form.append("image[]", await dataUrlToFile(dl, "master-dieline.png"));
+    try {
+      await streamImage("/api/edit-image", form, (src, fin) => {
+        setMasterArt(src);
+        setMasterArtFinal(fin);
+        if (fin) void saveFile("artwork-master", src, "Master carton artwork");
+      }, undefined, await authHeaders());
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setMasterArtBusy(false);
+    }
+  }
+
   async function exportSvg() {
     if (!art || !dieline) return;
     setSvgBusy(true);
