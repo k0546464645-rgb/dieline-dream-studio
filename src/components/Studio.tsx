@@ -425,8 +425,8 @@ export function Studio({
               <ItemsImport
                 onPick={(patch) => {
                   setInfo((cur) => ({ ...cur, ...patch }));
-                  if (!product && (patch.productName || patch.brand)) {
-                    setDraft(`Design packaging for: ${[patch.brand, patch.productName].filter(Boolean).join(" — ")}`);
+                  if (!product && patch.productName) {
+                    setDraft(`Design packaging for: ${patch.productName}`);
                   }
                 }}
               />
