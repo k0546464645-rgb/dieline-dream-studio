@@ -367,13 +367,17 @@ export function Studio({
       "prompt",
       `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockup ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
-    form.append("image[]", await dataUrlToFile(dieline, "dieline.png"));
+    form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
     if (mockup && mockupFinal) form.append("image[]", await dataUrlToFile(mockup, "mockup.png"));
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setArt(src);
         setArtFinal(fin);
-        if (fin) void saveFile("artwork", src, extra ? "Artwork (revised)" : "Artwork");
+        if (fin) {
+          void saveFile("artwork", src, extra ? "Artwork (revised)" : "Artwork");
+          // Auto chain: run AI quality control as soon as the artwork is ready
+          void runQc(src);
+        }
       }, undefined, await authHeaders());
     } catch (e) {
       toast.error((e as Error).message);
