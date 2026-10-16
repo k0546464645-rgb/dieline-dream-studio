@@ -82,20 +82,18 @@ function Dashboard() {
   );
 
   return (
-    <main className="neon min-h-screen px-6 py-8">
+    <main className="min-h-screen px-6 py-8">
       <div className="mx-auto max-w-[1500px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-accent">studio control · מרכז השליטה</p>
-            <h1 className="text-4xl font-extrabold tracking-tight">
-              Projects <span className="text-accent">·</span> פרויקטים
-            </h1>
+            <p className="font-mono text-xs uppercase tracking-widest text-accent">{t("dash.control")}</p>
+            <h1 className="text-4xl font-extrabold tracking-tight">{t("dash.title")}</h1>
           </div>
           <div className="flex flex-wrap gap-2">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search project, customer, supplier…"
+                placeholder={t("dash.search")}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 className="w-72 bg-card pl-9"
@@ -103,11 +101,11 @@ function Dashboard() {
             </div>
             <Button variant="outline" onClick={() => navigate({ to: "/ideas" })}>
               <Lightbulb className="size-4" />
-              Free ideas · רעיונות חופשיים
+              {t("dash.freeideas")}
             </Button>
             <Button variant="cut" onClick={() => setOpen(true)}>
               <Plus className="size-4" />
-              New project · פרויקט חדש
+              {t("dash.new")}
             </Button>
           </div>
         </div>
