@@ -8,6 +8,7 @@ import { fileToDataUrl } from "@/lib/studio-client";
 import { Studio, type StudioInstruction } from "@/components/Studio";
 import { SendApproval, ShareLinks } from "@/components/SendApproval";
 import { ArchiveImport } from "@/components/ArchiveImport";
+import { CloudImport } from "@/components/CloudImport";
 import { ProjectItems } from "@/components/ProjectItems";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
