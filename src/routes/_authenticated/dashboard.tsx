@@ -184,20 +184,20 @@ function Dashboard() {
             <div className="space-y-1">
               <Label>{t("dash.type")}</Label>
               <div className="grid grid-cols-2 gap-2">
-                {PROJECT_TYPES.map((t) => {
-                  const Icon = TYPE_ICONS[t.id] ?? Package;
+                {PROJECT_TYPES.map((pt) => {
+                  const Icon = TYPE_ICONS[pt.id] ?? Package;
                   return (
                     <button
-                      key={t.id}
+                      key={pt.id}
                       type="button"
-                      onClick={() => setForm({ ...form, project_type: t.id })}
-                      className={`rounded-md border p-3 text-left transition-colors ${form.project_type === t.id ? "border-accent bg-card ring-1 ring-accent" : "bg-card hover:border-foreground"}`}
+                      onClick={() => setForm({ ...form, project_type: pt.id })}
+                      className={`rounded-md border p-3 text-left transition-colors ${form.project_type === pt.id ? "border-accent bg-card ring-1 ring-accent" : "bg-card hover:border-foreground"}`}
                     >
                       <p className="flex items-center gap-1.5 text-sm font-semibold">
                         <Icon className="size-4 text-accent" />
-                        {t(`ptype.${t.id}` as DictKey)}
+                        {t(`ptype.${pt.id}` as DictKey)}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{t(`ptype.${t.id}.hint` as DictKey)}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{t(`ptype.${pt.id}.hint` as DictKey)}</p>
                     </button>
                   );
                 })}
