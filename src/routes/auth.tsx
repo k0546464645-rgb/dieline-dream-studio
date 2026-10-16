@@ -80,29 +80,65 @@ function AuthPage() {
   }
 
   return (
-    <div className="bg-grid flex min-h-screen items-center justify-center px-4">
-      <div className="crop-marks w-full max-w-sm rounded-lg border bg-card p-8">
-        <p className="font-mono text-xs uppercase tracking-widest text-accent">studio access</p>
-        <h1 className="mt-1 text-3xl font-extrabold tracking-tight">Dieline Studio</h1>
-        <form onSubmit={submit} className="mt-6 space-y-4">
-          <div className="space-y-1.5">
-            <Label>Email</Label>
-            <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-background" />
+    <div className="grid min-h-screen lg:grid-cols-2">
+      {/* Brand panel — print-shop inspired */}
+      <div className="relative hidden overflow-hidden bg-ink text-paper lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div className="bg-grid absolute inset-0 opacity-[0.35]" />
+        <div className="pointer-events-none absolute -right-24 top-1/2 aspect-square w-[34rem] -translate-y-1/2 rotate-12 rounded-[3rem] border-2 border-dashed border-cut opacity-60" />
+        <div className="pointer-events-none absolute -right-10 top-1/2 aspect-square w-[26rem] -translate-y-1/2 rotate-12 rounded-[2rem] border border-paper/20" />
+        <div className="relative flex items-center gap-3">
+          <span className="gradient-accent flex size-10 items-center justify-center rounded-xl font-mono text-sm font-bold text-accent-foreground">DS</span>
+          <span className="font-mono text-xs uppercase tracking-[0.3em] text-paper/70">Dieline Studio</span>
+        </div>
+        <div className="relative">
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-cut">concept → artwork → dieline → approval</p>
+          <h1 className="mt-4 text-6xl font-extrabold leading-[0.95] tracking-tight">
+            Design.<br />Approve.<br /><span className="text-cut">Print.</span>
+          </h1>
+          <p className="mt-6 max-w-sm text-sm leading-relaxed text-paper/60">
+            הסטודיו שמנהל את כל תהליך האריזה — מהקונספט ועד הקובץ המוכן לדפוס.
+          </p>
+        </div>
+        <p className="relative font-mono text-[10px] uppercase tracking-widest text-paper/40">packaging workflow · v2 · est. 2026</p>
+      </div>
+
+      {/* Form panel */}
+      <div className="bg-grid flex items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <span className="gradient-accent flex size-9 items-center justify-center rounded-xl font-mono text-xs font-bold text-accent-foreground">DS</span>
+            <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Dieline Studio</span>
           </div>
-          <div className="space-y-1.5">
-            <Label>Password</Label>
-            <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-background" />
-          </div>
-          <Button type="submit" className="w-full" disabled={busy}>
-            {mode === "in" ? "Sign in" : "Create account"}
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent">{mode === "in" ? "studio access" : "join the studio"}</p>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight">{mode === "in" ? "Welcome back" : "Create your account"}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{mode === "in" ? "Sign in to continue to your projects." : "One account for the whole packaging workflow."}</p>
+
+          <Button variant="outline" className="mt-8 w-full" onClick={google}>
+            Continue with Google
           </Button>
-        </form>
-        <Button variant="outline" className="mt-3 w-full" onClick={google}>
-          Continue with Google
-        </Button>
-        <button onClick={() => setMode(mode === "in" ? "up" : "in")} className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground">
-          {mode === "in" ? "New here? Create an account" : "Have an account? Sign in"}
-        </button>
+          <div className="my-5 flex items-center gap-3">
+            <span className="h-px flex-1 bg-border" />
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">or with email</span>
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <form onSubmit={submit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Email</Label>
+              <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-card" placeholder="you@studio.com" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Password</Label>
+              <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-card" placeholder="••••••••" />
+            </div>
+            <Button type="submit" variant="cut" className="w-full" disabled={busy}>
+              {mode === "in" ? "Sign in" : "Create account"}
+            </Button>
+          </form>
+          <button onClick={() => setMode(mode === "in" ? "up" : "in")} className="mt-5 w-full text-center text-sm text-muted-foreground transition-colors hover:text-foreground">
+            {mode === "in" ? "New here? Create an account" : "Have an account? Sign in"}
+          </button>
+        </div>
       </div>
     </div>
   );

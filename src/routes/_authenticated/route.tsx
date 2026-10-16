@@ -33,9 +33,9 @@ function Layout() {
   }
   return (
     <div className="min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-16 flex-col border-r bg-card md:w-60">
+      <aside className="fixed inset-y-0 left-0 z-40 flex w-16 flex-col bg-ink text-paper md:w-60">
         <Link to="/dashboard" className="flex items-center gap-3 px-4 py-5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-accent font-mono text-sm font-bold text-accent-foreground">
+          <span className="gradient-accent flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-mono text-sm font-bold text-accent-foreground">
             DS
           </span>
           <span className="hidden text-lg font-extrabold tracking-tight md:block">Dieline Studio</span>
@@ -45,17 +45,17 @@ function Layout() {
             <Link
               key={to}
               to={to}
-              className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              activeProps={{ className: "bg-secondary text-foreground font-semibold" }}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-paper/60 transition-all hover:bg-paper/10 hover:text-paper"
+              activeProps={{ className: "bg-paper/10 text-paper font-semibold shadow-[inset_2px_0_0_var(--cut)]" }}
             >
               <Icon className="size-4 shrink-0" />
               <span className="hidden md:block">{label}</span>
             </Link>
           ))}
         </nav>
-        <div className="border-t px-2 py-3">
-          <p className="hidden truncate px-3 pb-2 font-mono text-[11px] text-muted-foreground md:block">{user.email}</p>
-          <Button size="sm" variant="ghost" onClick={signOut} className="w-full justify-center md:justify-start">
+        <div className="border-t border-paper/10 px-2 py-3">
+          <p className="hidden truncate px-3 pb-2 font-mono text-[11px] text-paper/40 md:block">{user.email}</p>
+          <Button size="sm" variant="ghost" onClick={signOut} className="w-full justify-center text-paper/60 hover:bg-paper/10 hover:text-paper md:justify-start">
             <LogOut className="size-4" />
             <span className="hidden md:block">Sign out</span>
           </Button>

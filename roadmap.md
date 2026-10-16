@@ -41,5 +41,5 @@
 - [x] Delete + download option for project files in the Folder tab (delete verified live)
 - [x] Product Information panels always collapsed by default (verified live)
 - [x] Rename project: exists in Details tab; added quick-rename pencil on dashboard cards
-- [ ] UI redesign round 2: user dislikes login page + inner pages look — new innovative visual direction (login first, then inner pages)
-- [ ] Cloud drive integration: import files into a project from OneDrive and Google Drive
+- [~] UI redesign round 2: login page redesigned (split screen, dark brand panel "Design. Approve. Print.", verified live) + dark ink sidebar with cut accent (verified live); inner pages (dashboard cards, project page, studio) still to refresh
+- [x] Cloud drive integration: import from Google Drive + OneDrive into a project (browse folders, multi-select, Google Docs auto-export to PDF — verified live)
