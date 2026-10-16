@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireStudio } from "@/lib/require-studio.server";
 
-type Msg = { role: "user" | "assistant"; text: string };
+type Msg = { role: "user" | "assistant"; text: string; images?: string[] | undefined };
 
 const SYSTEM = `You are a senior packaging designer and creative director.
 First carefully review the uploaded product photo (shape, material, category, current branding).
@@ -12,7 +12,8 @@ the artistic direction, and how it wraps around the pack (front hero vs. back in
 When the user approves a concept, develop it into a detailed final design idea tailored to this exact
 product, starting with the line "## FINAL CONCEPT: <Name>", and describe front, sides and back panel layout.
 The back panel must hold most of the text: description, ingredients, warnings, barcode, item number.
-Be concise, visual and specific.`;
+Any image attached to a message is a reference the designer dragged in (mood board, competitor pack, logo, sketch) —
+follow what it shows. Be concise, visual and specific.`;
 
 export const Route = createFileRoute("/api/concept")({
   server: {
@@ -50,9 +51,10 @@ STYLE GUIDE:\n${styleGuide.text.slice(0, 6000)}`;
           if (m.role === "assistant") {
             return { role: "assistant", content: [{ type: "output_text", text: m.text }] };
           }
-          const content: Record<string, unknown>[] = [{ type: "input_text", text: m.text }];
+          const content: Record<string, unknown>[] = [{ type: "input_text", text: m.text || "(image attached)" }];
           if (i === 0 && productImage) content.push({ type: "input_image", image_url: productImage });
           if (i === 0) styleGuide?.images?.slice(0, 4).forEach((img) => content.push({ type: "input_image", image_url: img }));
+          (m.images ?? []).slice(0, 4).forEach((img) => content.push({ type: "input_image", image_url: img }));
           return { role: "user", content };
         });
         const upstream = await fetch("https://ai.gateway.lovable.dev/v1/responses", {

@@ -80,7 +80,7 @@ function Dashboard() {
   );
 
   return (
-    <main className="neon min-h-[calc(100vh-3.5rem)] px-6 py-8">
+    <main className="neon min-h-screen px-6 py-8">
       <div className="mx-auto max-w-[1500px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>

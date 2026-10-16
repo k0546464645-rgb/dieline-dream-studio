@@ -34,7 +34,7 @@ function Layout() {
   }
   return (
     <div className="min-h-screen">
-      <aside className="fixed inset-y-0 left-0 z-40 flex w-16 flex-col bg-ink text-paper md:w-60">
+      <aside className="fixed inset-y-0 left-0 z-40 flex w-16 flex-col border-r border-white/10 bg-shell text-paper md:w-60">
         <Link to="/dashboard" className="flex items-center gap-3 px-4 py-5">
           <span className="gradient-accent flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-mono text-sm font-bold text-accent-foreground">
             DS

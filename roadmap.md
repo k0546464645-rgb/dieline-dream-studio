@@ -47,3 +47,4 @@
 - [~] Autopilot: learns products/categories the designer works on, ongoing research, fresh concepts shown dynamically at the bottom of the home screen
 - [x] Free ideas chat screen (/ideas): concept generation without a product, save outcome as project or as ideas (verified live)
 - [~] Autopilot: dashboard "Fresh ideas" strip learns from recent projects + existing ideas, auto-refreshes when stale (verified live); continuous background research (scheduled) still pending
+- [x] Chat: drag/paste/pick images into the ideas chat and the project chat as visual references + start a project directly from the chat (verified live)

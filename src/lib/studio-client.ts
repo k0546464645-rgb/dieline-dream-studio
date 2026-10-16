@@ -1,6 +1,6 @@
 import { createParser } from "eventsource-parser";
 
-export type ChatMsg = { role: "user" | "assistant"; text: string };
+export type ChatMsg = { role: "user" | "assistant"; text: string; images?: string[] | undefined };
 
 export type ConceptContext = {
   styleGuide?: { text: string; images: string[] } | undefined;
