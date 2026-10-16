@@ -132,15 +132,14 @@ function ProjectPage() {
     setInstruction(null);
   }
 
-  if (!p) return <div className="p-10 text-muted-foreground">Loading project…</div>;
+  if (!p) return <div className="p-10 text-muted-foreground">{t("proj.loading")}</div>;
   const stageIdx = STAGES.findIndex((s) => s.id === p.stage);
-  const grouped = Object.entries(KIND_LABEL).map(([k, l]) => [l, (files.data ?? []).filter((f) => f.kind === k)] as const);
 
   return (
     <main className="mx-auto max-w-[1500px] px-6 py-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link to="/dashboard" className="font-mono text-xs text-muted-foreground hover:text-foreground">← all projects</Link>
+          <Link to="/dashboard" className="font-mono text-xs text-muted-foreground hover:text-foreground">{t("proj.back")}</Link>
           <h1 className="text-3xl font-extrabold tracking-tight">{p.name}</h1>
           <p className="text-sm text-muted-foreground">{[projectTypeLabel(p.project_type), p.customer_name, p.supplier && `Supplier: ${p.supplier}`, p.supplier_item].filter(Boolean).join(" · ")}</p>
         </div>
@@ -150,34 +149,34 @@ function ProjectPage() {
             onChange={(e) => update({ style_guide_id: e.target.value || null })}
             className="h-9 rounded-md border border-input bg-card px-3 text-sm"
           >
-            <option value="">No style guide</option>
-            {guides.data?.map((g) => <option key={g.id} value={g.id}>Style: {g.name}</option>)}
+            <option value="">{t("proj.noguide")}</option>
+            {guides.data?.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
-          <Button variant="outline" onClick={saveAsGuide}>Save as style guide</Button>
-          <Button variant="cut" onClick={() => setSendOpen(true)}>Send for approval</Button>
+          <Button variant="outline" onClick={saveAsGuide}>{t("proj.saveguide")}</Button>
+          <Button variant="cut" onClick={() => setSendOpen(true)}>{t("proj.send")}</Button>
         </div>
       </div>
 
       <ol className="mt-5 grid grid-cols-5 gap-1">
         {STAGES.map((s, i) => (
           <li key={s.id} className={`rounded px-3 py-2 font-mono text-[11px] uppercase ${i < stageIdx ? "bg-secondary text-muted-foreground" : i === stageIdx ? "bg-primary text-primary-foreground" : "border text-muted-foreground"}`}>
-            {i < stageIdx ? "✓ " : ""}{s.label}
+            {i < stageIdx ? "✓ " : ""}{t(`stage.${s.id}` as DictKey)}
           </li>
         ))}
       </ol>
 
       <Tabs defaultValue="design" className="mt-5">
         <TabsList>
-          <TabsTrigger value="design">Design</TabsTrigger>
-          <TabsTrigger value="approvals">Approvals {approvals.data?.some((a) => a.status !== "pending" && !a.applied && a.status !== "approved") ? "•" : ""}</TabsTrigger>
-          <TabsTrigger value="files">Folder ({files.data?.length ?? 0})</TabsTrigger>
-          {p.project_type !== "single" && <TabsTrigger value="items">Items · פריטים</TabsTrigger>}
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+          <TabsTrigger value="design">{t("tab.design")}</TabsTrigger>
+          <TabsTrigger value="approvals">{t("tab.approvals")} {approvals.data?.some((a) => a.status !== "pending" && !a.applied && a.status !== "approved") ? "•" : ""}</TabsTrigger>
+          <TabsTrigger value="files">{t("tab.files")} ({files.data?.length ?? 0})</TabsTrigger>
+          {p.project_type !== "single" && <TabsTrigger value="items">{t("tab.items")}</TabsTrigger>}
+          <TabsTrigger value="details">{t("tab.details")}</TabsTrigger>
+          <TabsTrigger value="history">{t("tab.history")}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="design" forceMount className="data-[state=inactive]:hidden">
-          {guideCtx && <p className="mb-3 font-mono text-xs text-accent">Style guide active — the chat will follow it and ask which sub-style to use.</p>}
+          {guideCtx && <p className="mb-3 font-mono text-xs text-accent">{t("proj.guideactive")}</p>}
           <Studio
             project={p}
             styleGuide={guideCtx}
