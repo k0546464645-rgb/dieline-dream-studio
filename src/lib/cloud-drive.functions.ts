@@ -17,8 +17,10 @@ const input = z.object({
   folderId: z.string().optional(),
 });
 
-async function assertStudio(supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown }> }, userId: string) {
-  const { data: ok } = await supabase.rpc("has_role", { _user_id: userId, _role: "studio" });
+type AuthContext = { supabase: { rpc: (fn: "has_role", args: { _user_id: string; _role: "studio" }) => Promise<{ data: unknown }> }; userId: string };
+
+async function assertStudio(context: AuthContext) {
+  const { data: ok } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "studio" });
   if (!ok) throw new Error("No studio access");
 }
 
