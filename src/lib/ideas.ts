@@ -10,7 +10,10 @@ export function parseConcepts(text: string): ParsedIdea[] {
   }
   return heads.map((title, i) => {
     const content = (parts[i + 1] ?? "").trim();
-    const firstLine = content.split("\n").find((l) => l.trim()) ?? "";
-    return { title, summary: firstLine.replace(/^\*\*|\*\*$/g, "").slice(0, 200), content: `${title}\n\n${content}` };
+    const strip = (l: string) => l.replace(/\*\*/g, "").replace(/^[-–—:\s]+|[-–—:\s]+$/g, "").trim();
+    const lines = content.split("\n").map((l) => l.trim()).filter(Boolean);
+    // Skip an opening line that just restates the concept name (bolded or followed by a dash).
+    const firstLine = lines.find((l) => strip(l) !== title && !strip(l).startsWith(title)) ?? lines[0] ?? "";
+    return { title, summary: strip(firstLine).slice(0, 200), content: `${title}\n\n${content}` };
   });
 }
