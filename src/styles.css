@@ -86,35 +86,35 @@
   }
 }
 
-/* Neon scope: black + neon purple surfaces for the dashboard home */
+/* Neon scope: deep plum-graphite (lighter than black) + neon purple for the dashboard home */
 .neon {
-  --background: oklch(0.14 0.02 295);
-  --foreground: oklch(0.95 0.02 300);
-  --card: oklch(0.19 0.035 295);
-  --card-foreground: oklch(0.95 0.02 300);
-  --popover: oklch(0.19 0.035 295);
-  --popover-foreground: oklch(0.95 0.02 300);
+  --background: oklch(0.31 0.045 295);
+  --foreground: oklch(0.96 0.015 300);
+  --card: oklch(0.37 0.055 297);
+  --card-foreground: oklch(0.96 0.015 300);
+  --popover: oklch(0.37 0.055 297);
+  --popover-foreground: oklch(0.96 0.015 300);
   --primary: oklch(0.95 0.02 300);
-  --primary-foreground: oklch(0.16 0.03 295);
-  --secondary: oklch(0.25 0.05 300);
-  --secondary-foreground: oklch(0.9 0.03 300);
-  --muted: oklch(0.23 0.04 300);
-  --muted-foreground: oklch(0.68 0.06 300);
-  --cut: oklch(0.72 0.29 305);
-  --cut-soft: oklch(0.28 0.08 305);
-  --border: oklch(0.3 0.06 300);
-  --input: oklch(0.35 0.08 300);
-  --grid: linear-gradient(to right, color-mix(in oklab, var(--cut) 12%, transparent) 1px, transparent 1px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--cut) 12%, transparent) 1px, transparent 1px);
-  --glow: 0 0 24px -4px color-mix(in oklab, var(--cut) 60%, transparent);
-  --shadow-soft: 0 1px 2px color-mix(in oklab, black 40%, transparent), 0 10px 28px -10px color-mix(in oklab, black 60%, transparent);
+  --primary-foreground: oklch(0.3 0.05 295);
+  --secondary: oklch(0.45 0.07 300);
+  --secondary-foreground: oklch(0.95 0.02 300);
+  --muted: oklch(0.43 0.06 300);
+  --muted-foreground: oklch(0.79 0.045 300);
+  --cut: oklch(0.76 0.28 305);
+  --cut-soft: oklch(0.5 0.13 305);
+  --border: oklch(0.52 0.07 300);
+  --input: oklch(0.55 0.08 300);
+  --grid: linear-gradient(to right, color-mix(in oklab, var(--cut) 18%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--cut) 18%, transparent) 1px, transparent 1px);
+  --glow: 0 0 26px -4px color-mix(in oklab, var(--cut) 65%, transparent);
+  --shadow-soft: 0 1px 2px color-mix(in oklab, oklch(0.18 0.04 295) 35%, transparent), 0 10px 28px -10px color-mix(in oklab, oklch(0.18 0.04 295) 45%, transparent);
   background-color: var(--background);
   color: var(--foreground);
 }
 
 @utility neon-card {
-  background: linear-gradient(160deg, color-mix(in oklab, var(--card) 100%, transparent), color-mix(in oklab, var(--card) 70%, black));
-  border: 1px solid color-mix(in oklab, var(--cut) 22%, transparent);
+  background: linear-gradient(160deg, color-mix(in oklab, var(--card) 100%, transparent), color-mix(in oklab, var(--card) 82%, var(--cut-soft)));
+  border: 1px solid color-mix(in oklab, var(--cut) 30%, transparent);
   transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
   &:hover {
     border-color: color-mix(in oklab, var(--cut) 70%, transparent);
