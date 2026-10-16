@@ -21,6 +21,7 @@ import {
 import { DesignBoard, parseConcepts, type ConceptOption } from "@/components/DesignBoard";
 import { InfoForm, LANGUAGES, emptyInfo, infoPrompt } from "@/components/InfoForm";
 import { ItemsImport } from "@/components/ItemsImport";
+import { VoiceButton } from "@/components/VoiceButton";
 
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
