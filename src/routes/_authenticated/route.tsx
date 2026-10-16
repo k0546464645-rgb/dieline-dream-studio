@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { FolderKanban, Lightbulb, LogOut, SwatchBook, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { StudioSettings } from "@/components/StudioSettings";
+import { usePrefs, type DictKey } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
