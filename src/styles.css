@@ -39,11 +39,11 @@
 
 :root {
   --radius: 0.75rem;
-  /* Light studio: warm paper canvas, deep ink text, tangerine cut line */
-  --paper: oklch(0.975 0.008 95);
-  --ink: oklch(0.26 0.03 262);
-  --cut: oklch(0.72 0.19 48);
-  --cut-soft: oklch(0.94 0.05 60);
+  /* Light studio: warm paper canvas, deep ink text, neon purple cut line */
+  --paper: oklch(0.975 0.008 300);
+  --ink: oklch(0.26 0.05 295);
+  --cut: oklch(0.58 0.28 302);
+  --cut-soft: oklch(0.93 0.05 305);
   --background: var(--paper);
   --foreground: var(--ink);
   --card: oklch(1 0 0);
@@ -52,18 +52,18 @@
   --popover-foreground: var(--ink);
   --primary: var(--ink);
   --primary-foreground: oklch(0.98 0.005 95);
-  --secondary: oklch(0.945 0.012 80);
+  --secondary: oklch(0.945 0.025 300);
   --secondary-foreground: var(--ink);
-  --muted: oklch(0.955 0.01 85);
+  --muted: oklch(0.955 0.02 300);
   --muted-foreground: oklch(0.52 0.025 262);
   --accent: var(--cut);
   --accent-foreground: oklch(0.99 0.005 95);
   --destructive: oklch(0.6 0.2 27);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.9 0.012 80);
-  --input: oklch(0.88 0.014 80);
+  --border: oklch(0.9 0.02 300);
+  --input: oklch(0.88 0.03 300);
   --ring: var(--cut);
-  --gradient-accent: linear-gradient(135deg, oklch(0.78 0.18 55), var(--cut) 55%, oklch(0.66 0.21 35));
+  --gradient-accent: linear-gradient(135deg, oklch(0.7 0.3 310), var(--cut) 50%, oklch(0.55 0.3 330));
   --shadow-soft: 0 1px 2px color-mix(in oklab, var(--ink) 5%, transparent), 0 8px 24px -8px color-mix(in oklab, var(--ink) 12%, transparent);
   --shadow-lift: 0 2px 4px color-mix(in oklab, var(--ink) 6%, transparent), 0 14px 32px -10px color-mix(in oklab, var(--ink) 18%, transparent);
   --grid: linear-gradient(to right, color-mix(in oklab, var(--ink) 4%, transparent) 1px, transparent 1px),
