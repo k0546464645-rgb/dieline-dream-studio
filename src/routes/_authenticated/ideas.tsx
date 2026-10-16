@@ -11,6 +11,7 @@ import { AttachmentStrip, useChatAttachments, useImageDrop } from "@/components/
 import { Button } from "@/components/ui/button";
 import { VoiceButton } from "@/components/VoiceButton";
 import { Textarea } from "@/components/ui/textarea";
+import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/ideas")({
   head: () => ({
@@ -22,14 +23,10 @@ export const Route = createFileRoute("/_authenticated/ideas")({
   component: IdeasChat,
 });
 
-const OPENING: ChatMsg = {
-  role: "assistant",
-  text: "Hey! I'm your free-ideas studio — no product needed. Tell me about a brand, a category, a trend or a vibe, and I'll sketch packaging concepts for you. You can also drag mood-board or competitor photos straight into this chat.\n\nWhen you like something, start a **project** from the chat or file it under **ideas**.\n\nהיי! כאן מייצרים רעיונות חופשיים בלי מוצר. ספרו לי על מותג, קטגוריה או טרנד — ואציע קונספטים. אפשר גם לגרור תמונות לתוך הצ׳אט. בסוף מתחילים פרויקט ישירות מהצ׳אט או שומרים כרעיונות.",
-};
-
 function IdeasChat() {
+  const { t } = usePrefs();
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<ChatMsg[]>([OPENING]);
+  const [messages, setMessages] = useState<ChatMsg[]>([{ role: "assistant", text: t("ideas.opening") }]);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -114,10 +111,8 @@ function IdeasChat() {
           <Lightbulb className="size-5" />
         </span>
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Ideas chat · צ'אט רעיונות</h1>
-          <p className="text-sm text-muted-foreground">
-            Free concept creation — drag photos in, then start a project · יצירת קונספטים חופשית, גוררים תמונות ומתחילים פרויקט
-          </p>
+          <h1 className="text-2xl font-extrabold tracking-tight">{t("ideas.title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("ideas.sub")}</p>
         </div>
       </div>
 
@@ -129,7 +124,7 @@ function IdeasChat() {
       >
         {dropOver && (
           <p className="pointer-events-none sticky top-0 z-10 rounded-md bg-accent px-3 py-1 text-center font-mono text-[11px] uppercase tracking-widest text-accent-foreground">
-            Drop images here · שחררו תמונות כאן
+            {t("ideas.drop")}
           </p>
         )}
         {messages.map((m, i) => (
@@ -156,11 +151,11 @@ function IdeasChat() {
       {(started || hasConcepts) && (
         <div className="mt-3 flex flex-wrap gap-2">
           <Button variant="cut" onClick={startProject} disabled={saving || thinking || !started}>
-            <FolderPlus className="size-4" /> Start project from chat · התחלת פרויקט מהצ׳אט
+            <FolderPlus className="size-4" /> {t("ideas.start")}
           </Button>
           {hasConcepts && (
             <Button variant="outline" onClick={saveToIdeas} disabled={saving || thinking}>
-              <BookmarkPlus className="size-4" /> Save to ideas · שמירה לרעיונות
+              <BookmarkPlus className="size-4" /> {t("ideas.save")}
             </Button>
           )}
         </div>
@@ -205,7 +200,7 @@ function IdeasChat() {
               void send();
             }
           }}
-          placeholder="A brand, category, trend or vibe… drag or paste images too · מותג, קטגוריה, טרנד או וייב…"
+          placeholder={t("ideas.placeholder")}
           className="min-h-12 bg-card"
         />
         <VoiceButton className="self-end" disabled={thinking} onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />

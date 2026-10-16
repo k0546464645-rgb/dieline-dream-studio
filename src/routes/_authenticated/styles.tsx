@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/styles")({
   head: () => ({ meta: [{ title: "Style guides — Dieline Studio" }, { name: "description", content: "Brand and licensed style guide library." }] }),
@@ -31,6 +32,7 @@ type Guide = {
 const blank: Omit<Guide, "id"> = { name: "", brand: "", kind: "uploaded", colors: "", fonts: "", imagery: "", directions: "", notes: "", image_paths: [] };
 
 function Styles() {
+  const { t } = usePrefs();
   const qc = useQueryClient();
   const [edit, setEdit] = useState<(Omit<Guide, "id"> & { id?: string }) | null>(null);
   const [busy, setBusy] = useState(false);
@@ -87,10 +89,10 @@ function Styles() {
       <div className="flex items-end justify-between gap-4">
         <div>
           <p className="font-mono text-xs uppercase tracking-widest text-accent">library</p>
-          <h1 className="text-4xl font-extrabold tracking-tight">Style guides</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Your own brand guides, licensed character guides, and guides saved from approved projects.</p>
+          <h1 className="text-4xl font-extrabold tracking-tight">{t("sty.title")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t("sty.sub")}</p>
         </div>
-        <Button variant="cut" onClick={() => setEdit({ ...blank })}>+ New style guide</Button>
+        <Button variant="cut" onClick={() => setEdit({ ...blank })}>{t("sty.new")}</Button>
       </div>
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {data?.guides.map((g) => (
@@ -105,12 +107,12 @@ function Styles() {
             <h3 className="text-lg font-bold">{g.name}</h3>
             <p className="line-clamp-3 text-sm text-muted-foreground">{g.directions || g.colors || g.notes}</p>
             <div className="mt-3 flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setEdit(g)}>Open</Button>
-              <Button size="sm" variant="ghost" onClick={() => remove(g.id)}>Delete</Button>
+              <Button size="sm" variant="outline" onClick={() => setEdit(g)}>{t("sty.open")}</Button>
+              <Button size="sm" variant="ghost" onClick={() => remove(g.id)}>{t("sty.delete")}</Button>
             </div>
           </div>
         ))}
-        {data && data.guides.length === 0 && <p className="text-sm text-muted-foreground">No style guides yet.</p>}
+        {data && data.guides.length === 0 && <p className="text-sm text-muted-foreground">{t("sty.empty")}</p>}
       </div>
 
       <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
@@ -150,7 +152,7 @@ function Styles() {
                 <Input type="file" multiple accept="image/*" disabled={busy} onChange={(e) => addImages(e.target.files)} className="bg-card" />
                 <p className="text-xs text-muted-foreground">Upload guide pages as images (PNG/JPG). The first 4 are shown to the AI when designing.</p>
               </div>
-              <Button variant="cut" onClick={save} disabled={busy}>{busy ? "Uploading…" : "Save style guide"}</Button>
+              <Button variant="cut" onClick={save} disabled={busy}>{busy ? "Uploading…" : t("sty.save")}</Button>
             </div>
           )}
         </DialogContent>

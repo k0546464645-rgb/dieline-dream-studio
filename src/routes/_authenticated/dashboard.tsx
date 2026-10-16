@@ -18,7 +18,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PROJECT_TYPES, projectTypeLabel, signedUrls, stageLabel, STAGES } from "@/lib/storage";
+import { PROJECT_TYPES, signedUrls, STAGES } from "@/lib/storage";
+import { usePrefs, type DictKey } from "@/lib/prefs";
 import { IdeasStrip } from "@/components/IdeasStrip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
 };
 
 function Dashboard() {
+  const { t } = usePrefs();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
@@ -80,20 +82,18 @@ function Dashboard() {
   );
 
   return (
-    <main className="neon min-h-screen px-6 py-8">
+    <main className="min-h-screen px-6 py-8">
       <div className="mx-auto max-w-[1500px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-accent">studio control · מרכז השליטה</p>
-            <h1 className="text-4xl font-extrabold tracking-tight">
-              Projects <span className="text-accent">·</span> פרויקטים
-            </h1>
+            <p className="font-mono text-xs uppercase tracking-widest text-accent">{t("dash.control")}</p>
+            <h1 className="text-4xl font-extrabold tracking-tight">{t("dash.title")}</h1>
           </div>
           <div className="flex flex-wrap gap-2">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Search project, customer, supplier…"
+                placeholder={t("dash.search")}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 className="w-72 bg-card pl-9"
@@ -101,11 +101,11 @@ function Dashboard() {
             </div>
             <Button variant="outline" onClick={() => navigate({ to: "/ideas" })}>
               <Lightbulb className="size-4" />
-              Free ideas · רעיונות חופשיים
+              {t("dash.freeideas")}
             </Button>
             <Button variant="cut" onClick={() => setOpen(true)}>
               <Plus className="size-4" />
-              New project · פרויקט חדש
+              {t("dash.new")}
             </Button>
           </div>
         </div>
@@ -122,7 +122,7 @@ function Dashboard() {
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">0{i + 1}</span>
                 </div>
-                <p className="mt-3 font-mono text-[11px] uppercase text-muted-foreground">{s.label}</p>
+                <p className="mt-3 font-mono text-[11px] uppercase text-muted-foreground">{t(`stage.${s.id}` as DictKey)}</p>
                 <p className="text-2xl font-bold">{count}</p>
               </div>
             );
@@ -158,18 +158,18 @@ function Dashboard() {
                 </div>
                 <p className="text-sm text-muted-foreground">{[p.customer_name, p.supplier].filter(Boolean).join(" · ") || "—"}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
-                  <span className="rounded bg-secondary px-2 py-0.5">{stageLabel(p.stage)}</span>
+                  <span className="rounded bg-secondary px-2 py-0.5">{t(`stage.${p.stage}` as DictKey)}</span>
                   <span className="inline-flex items-center gap-1 rounded bg-secondary px-2 py-0.5">
                     <TypeIcon className="size-3 text-accent" />
-                    {projectTypeLabel(p.project_type)}
+                    {t(`ptype.${p.project_type}` as DictKey)}
                   </span>
-                  {data?.pending.has(p.id) && <span className="rounded bg-accent px-2 py-0.5 text-accent-foreground">awaiting reply</span>}
-                  {p.status === "changes_requested" && <span className="rounded border border-accent px-2 py-0.5 text-accent">changes requested</span>}
+                  {data?.pending.has(p.id) && <span className="rounded bg-accent px-2 py-0.5 text-accent-foreground">{t("dash.awaiting")}</span>}
+                  {p.status === "changes_requested" && <span className="rounded border border-accent px-2 py-0.5 text-accent">{t("dash.changes")}</span>}
                 </div>
               </Link>
             );
           })}
-          {data && list.length === 0 && <p className="text-sm text-muted-foreground">No projects yet — create the first one.</p>}
+          {data && list.length === 0 && <p className="text-sm text-muted-foreground">{t("dash.empty")}</p>}
         </div>
 
         <IdeasStrip />
@@ -178,26 +178,26 @@ function Dashboard() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="bg-background">
           <DialogHeader>
-            <DialogTitle>New project</DialogTitle>
+            <DialogTitle>{t("dash.new")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
             <div className="space-y-1">
-              <Label>Project type · סוג הפרויקט</Label>
+              <Label>{t("dash.type")}</Label>
               <div className="grid grid-cols-2 gap-2">
-                {PROJECT_TYPES.map((t) => {
-                  const Icon = TYPE_ICONS[t.id] ?? Package;
+                {PROJECT_TYPES.map((pt) => {
+                  const Icon = TYPE_ICONS[pt.id] ?? Package;
                   return (
                     <button
-                      key={t.id}
+                      key={pt.id}
                       type="button"
-                      onClick={() => setForm({ ...form, project_type: t.id })}
-                      className={`rounded-md border p-3 text-left transition-colors ${form.project_type === t.id ? "border-accent bg-card ring-1 ring-accent" : "bg-card hover:border-foreground"}`}
+                      onClick={() => setForm({ ...form, project_type: pt.id })}
+                      className={`rounded-md border p-3 text-left transition-colors ${form.project_type === pt.id ? "border-accent bg-card ring-1 ring-accent" : "bg-card hover:border-foreground"}`}
                     >
                       <p className="flex items-center gap-1.5 text-sm font-semibold">
                         <Icon className="size-4 text-accent" />
-                        {t.label}
+                        {t(`ptype.${pt.id}` as DictKey)}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{t.hint}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{t(`ptype.${pt.id}.hint` as DictKey)}</p>
                     </button>
                   );
                 })}
@@ -205,27 +205,27 @@ function Dashboard() {
             </div>
             {(
               [
-                ["name", "Project / product name"],
-                ["customer_name", "Customer"],
-                ["customer_email", "Customer email"],
-                ["customer_phone", "Customer WhatsApp / phone (with country code)"],
-                ["supplier", "Supplier / factory"],
-                ["supplier_item", "Supplier item / model no."],
+                ["name", "f.name"],
+                ["customer_name", "f.customer"],
+                ["customer_email", "f.email"],
+                ["customer_phone", "f.phone"],
+                ["supplier", "f.supplier"],
+                ["supplier_item", "f.item"],
               ] as const
             ).map(([k, l]) => (
               <div key={k} className="space-y-1">
-                <Label>{l}</Label>
+                <Label>{t(l)}</Label>
                 <Input value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className="bg-card" />
               </div>
             ))}
-            <Button variant="cut" onClick={create}>Create project</Button>
+            <Button variant="cut" onClick={create}>{t("dash.create")}</Button>
           </div>
         </DialogContent>
       </Dialog>
       <Dialog open={!!renaming} onOpenChange={(o) => !o && setRenaming(null)}>
         <DialogContent className="bg-background">
           <DialogHeader>
-            <DialogTitle>Rename project · שינוי שם פרויקט</DialogTitle>
+            <DialogTitle>{t("dash.rename")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
             <Input
@@ -235,7 +235,7 @@ function Dashboard() {
               onKeyDown={(e) => e.key === "Enter" && renameProject()}
               className="bg-card"
             />
-            <Button variant="cut" onClick={renameProject}>Save name</Button>
+            <Button variant="cut" onClick={renameProject}>{t("dash.savename")}</Button>
           </div>
         </DialogContent>
       </Dialog>

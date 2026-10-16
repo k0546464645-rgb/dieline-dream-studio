@@ -1,0 +1,386 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+
+export type Lang = "en" | "he";
+export type ThemeId = "neon" | "paper";
+
+export const ACCENTS = [
+  { id: "violet", cut: "oklch(0.58 0.28 302)", soft: "oklch(0.93 0.05 305)" },
+  { id: "blue", cut: "oklch(0.55 0.22 260)", soft: "oklch(0.93 0.04 260)" },
+  { id: "orange", cut: "oklch(0.65 0.2 50)", soft: "oklch(0.94 0.05 60)" },
+  { id: "green", cut: "oklch(0.6 0.18 155)", soft: "oklch(0.94 0.05 155)" },
+  { id: "pink", cut: "oklch(0.62 0.24 350)", soft: "oklch(0.94 0.05 350)" },
+] as const;
+export type AccentId = (typeof ACCENTS)[number]["id"];
+
+export const FONTS = [
+  { id: "bricolage", label: "Bricolage Grotesque", stack: '"Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif' },
+  { id: "heebo", label: "Heebo · העבו", stack: 'Heebo, ui-sans-serif, system-ui, sans-serif' },
+  { id: "assistant", label: "Assistant", stack: 'Assistant, ui-sans-serif, system-ui, sans-serif' },
+] as const;
+export type FontId = (typeof FONTS)[number]["id"];
+
+export type Prefs = { lang: Lang; theme: ThemeId; accent: AccentId; font: FontId };
+const DEFAULTS: Prefs = { lang: "he", theme: "neon", accent: "violet", font: "bricolage" };
+const KEY = "ds-prefs";
+
+const DICT = {
+  en: {
+    "nav.projects": "Projects",
+    "nav.ideas": "Ideas",
+    "nav.styles": "Style guides",
+    "nav.customers": "Customers",
+    "nav.signout": "Sign out",
+    "nav.settings": "Interface settings",
+    "noaccess.title": "No studio access",
+    "noaccess.body": "This studio is limited to its two team members. Ask the owner to give your account access.",
+    "set.title": "Interface settings",
+    "set.language": "Language",
+    "set.theme": "Theme",
+    "set.theme.neon": "Neon dark",
+    "set.theme.paper": "Light paper",
+    "set.accent": "Accent color",
+    "set.font": "Font",
+    "set.note": "Saved on this device. Step windows on the project page can be reordered by dragging the ⋮⋮ handle.",
+    "dash.control": "studio control",
+    "dash.title": "Projects",
+    "dash.search": "Search project, customer, supplier…",
+    "dash.freeideas": "Free ideas",
+    "dash.new": "New project",
+    "dash.empty": "No projects yet — create the first one.",
+    "dash.awaiting": "awaiting reply",
+    "dash.changes": "changes requested",
+    "dash.rename": "Rename project",
+    "dash.savename": "Save name",
+    "dash.create": "Create project",
+    "dash.type": "Project type",
+    "f.name": "Project / product name",
+    "f.customer": "Customer",
+    "f.email": "Customer email",
+    "f.phone": "Customer WhatsApp / phone (with country code)",
+    "f.supplier": "Supplier / factory",
+    "f.item": "Supplier item / model no.",
+    "ptype.single": "Single product",
+    "ptype.single.hint": "One product, one packaging",
+    "ptype.multiple": "Multiple products",
+    "ptype.multiple.hint": "Several items, each with its own packaging",
+    "ptype.series": "Series",
+    "ptype.series.hint": "Same product in variants (scents, colors, sizes)",
+    "ptype.collection": "Collection",
+    "ptype.collection.hint": "A full brand line with a shared design language",
+    "stage.concept": "Concept approval",
+    "stage.artwork": "Artwork + dieline approval",
+    "stage.final": "Final artwork approval",
+    "stage.production": "Purchasing / factory sign-off",
+    "stage.done": "Ready for production",
+    "proj.back": "← all projects",
+    "proj.noguide": "No style guide",
+    "proj.saveguide": "Save as style guide",
+    "proj.send": "Send for approval",
+    "proj.loading": "Loading project…",
+    "tab.design": "Design",
+    "tab.approvals": "Approvals",
+    "tab.files": "Folder",
+    "tab.items": "Items",
+    "tab.details": "Details",
+    "tab.history": "History",
+    "proj.guideactive": "Style guide active — the chat will follow it and ask which sub-style to use.",
+    "kind.product": "Product photos",
+    "kind.concept": "Concept visuals",
+    "kind.mockup": "3D designs",
+    "kind.dieline": "Dielines",
+    "kind.artwork": "Artwork",
+    "kind.final": "Final files (Illustrator)",
+    "kind.docs": "Documents",
+    "fm.search": "Search files…",
+    "fm.all": "All",
+    "fm.upload": "Upload files",
+    "fm.sort.new": "Newest first",
+    "fm.sort.old": "Oldest first",
+    "fm.sort.name": "By name",
+    "fm.select": "Select",
+    "fm.selectall": "Select all",
+    "fm.download": "Download",
+    "fm.delete": "Delete",
+    "fm.empty": "No files here yet — upload, drop or import.",
+    "fm.count": "files",
+    "fm.confirmdelete": "Delete the selected files?",
+    "step.01": "Your product",
+    "step.02": "Design concept",
+    "step.03": "Product information",
+    "step.04": "3D mockup",
+    "step.05": "Artwork on your dieline",
+    "st.task": "Choose a task",
+    "st.task.concept": "Create a concept",
+    "st.task.concept.d": "Get several creative directions, style guides and visuals to choose from.",
+    "st.task.ready": "Design from approved concept",
+    "st.task.ready.d": "Already have a concept? Paste it and go straight to the design.",
+    "st.task.guide": "Concept from a style guide",
+    "st.task.guide.d": "Design in the language of a saved brand / licensed character guide (Hello Kitty, Disney…).",
+    "st.upload": "Upload a product photo",
+    "st.replace": "Replace product photo",
+    "st.uploadhint": "JPG or PNG of the real product or its current pack.",
+    "st.send": "Send",
+    "st.render": "Render",
+    "st.rerender": "Re-render",
+    "st.place": "Place artwork on dieline",
+    "st.regen": "Regenerate artwork",
+    "st.export": "Export layered SVG for Illustrator",
+    "st.packtype": "Packaging type",
+    "st.adddieline": "+ Add a dieline / layout",
+    "st.master": "Shipping carton dieline",
+    "st.addmaster": "+ Add a master carton dieline / layout",
+    "cust.title": "Customers",
+    "cust.kicker": "clients",
+    "cust.search": "Search customer…",
+    "cust.new": "+ New customer",
+    "cust.projects": "projects",
+    "cust.empty": "No customers yet — add the first one.",
+    "cust.form.title": "New customer",
+    "cust.form.name": "Customer / company name",
+    "cust.form.contact": "Contact person",
+    "cust.form.email": "Email",
+    "cust.form.phone": "WhatsApp / phone (with country code)",
+    "cust.form.notes": "Notes",
+    "cust.form.add": "Add customer",
+    "sty.title": "Style guides",
+    "sty.sub": "Your own brand guides, licensed character guides, and guides saved from approved projects.",
+    "sty.new": "+ New style guide",
+    "sty.open": "Open",
+    "sty.delete": "Delete",
+    "sty.empty": "No style guides yet.",
+    "sty.save": "Save style guide",
+    "ideas.title": "Ideas chat",
+    "ideas.sub": "Free concept creation — drag photos in, then start a project",
+    "ideas.start": "Start project from chat",
+    "ideas.save": "Save to ideas",
+    "ideas.drop": "Drop images here",
+    "ideas.placeholder": "A brand, category, trend or vibe… drag or paste images too",
+    "ideas.opening": "Hey! I'm your free-ideas studio — no product needed. Tell me about a brand, a category, a trend or a vibe, and I'll sketch packaging concepts for you. You can also drag mood-board or competitor photos straight into this chat.\n\nWhen you like something, start a **project** from the chat or file it under **ideas**.",
+    "auth.welcome": "Welcome back",
+    "auth.create": "Create your account",
+    "auth.subin": "Sign in to continue to your projects.",
+    "auth.subup": "One account for the whole packaging workflow.",
+    "auth.google": "Continue with Google",
+    "auth.or": "or with email",
+    "auth.email": "Email",
+    "auth.password": "Password",
+    "auth.signin": "Sign in",
+    "auth.signup": "Create account",
+    "auth.toUp": "New here? Create an account",
+    "auth.toIn": "Have an account? Sign in",
+    "auth.access": "studio access",
+    "auth.join": "join the studio",
+    "auth.brand": "The studio that runs the whole packaging process — from concept to the print-ready file.",
+  },
+  he: {
+    "nav.projects": "פרויקטים",
+    "nav.ideas": "רעיונות",
+    "nav.styles": "מדריכי סגנון",
+    "nav.customers": "לקוחות",
+    "nav.signout": "התנתקות",
+    "nav.settings": "הגדרות ממשק",
+    "noaccess.title": "אין גישה לסטודיו",
+    "noaccess.body": "הסטודיו מוגבל לשני חברי הצוות. בקשו מהבעלים לתת לחשבונכם גישה.",
+    "set.title": "הגדרות ממשק",
+    "set.language": "שפה",
+    "set.theme": "ערכת צבע",
+    "set.theme.neon": "ניאון כהה",
+    "set.theme.paper": "נייר בהיר",
+    "set.accent": "צבע מבטא",
+    "set.font": "גופן",
+    "set.note": "נשמר במכשיר הזה. את חלונות השלבים בדף הפרויקט אפשר לסדר מחדש בגרירת הידית ⋮⋮.",
+    "dash.control": "מרכז השליטה",
+    "dash.title": "פרויקטים",
+    "dash.search": "חיפוש פרויקט, לקוח, ספק…",
+    "dash.freeideas": "רעיונות חופשיים",
+    "dash.new": "פרויקט חדש",
+    "dash.empty": "עוד אין פרויקטים — צרו את הראשון.",
+    "dash.awaiting": "ממתין לתשובה",
+    "dash.changes": "התבקשו שינויים",
+    "dash.rename": "שינוי שם פרויקט",
+    "dash.savename": "שמירת שם",
+    "dash.create": "יצירת פרויקט",
+    "dash.type": "סוג הפרויקט",
+    "f.name": "שם פרויקט / מוצר",
+    "f.customer": "לקוח",
+    "f.email": "אימייל לקוח",
+    "f.phone": "וואטסאפ / טלפון לקוח (כולל קידומת)",
+    "f.supplier": "ספק / מפעל",
+    "f.item": "מק״ט ספק / דגם",
+    "ptype.single": "מוצר אחד",
+    "ptype.single.hint": "מוצר אחד, אריזה אחת",
+    "ptype.multiple": "מספר מוצרים",
+    "ptype.multiple.hint": "כמה פריטים, לכל אחד אריזה משלו",
+    "ptype.series": "סדרה",
+    "ptype.series.hint": "אותו מוצר בוריאציות (ניחוחות, צבעים, מידות)",
+    "ptype.collection": "קולקציה",
+    "ptype.collection.hint": "קו מותג מלא בשפת עיצוב משותפת",
+    "stage.concept": "אישור קונספט",
+    "stage.artwork": "אישור ארטוורק + פריסה",
+    "stage.final": "אישור ארטוורק סופי",
+    "stage.production": "אישור רכש / מפעל",
+    "stage.done": "מוכן לייצור",
+    "proj.back": "← כל הפרויקטים",
+    "proj.noguide": "ללא מדריך סגנון",
+    "proj.saveguide": "שמירה כמדריך סגנון",
+    "proj.send": "שליחה לאישור",
+    "proj.loading": "טוען פרויקט…",
+    "tab.design": "עיצוב",
+    "tab.approvals": "אישורים",
+    "tab.files": "תיקייה",
+    "tab.items": "פריטים",
+    "tab.details": "פרטים",
+    "tab.history": "היסטוריה",
+    "proj.guideactive": "מדריך סגנון פעיל — הצ׳אט יעקוב אחריו וישאל באיזה תת־סגנון להשתמש.",
+    "kind.product": "תמונות מוצר",
+    "kind.concept": "ויז׳ואלים של קונספט",
+    "kind.mockup": "הדמיות תלת־ממד",
+    "kind.dieline": "פריסות",
+    "kind.artwork": "ארטוורק",
+    "kind.final": "קבצים סופיים (אילוסטרייטור)",
+    "kind.docs": "מסמכים",
+    "fm.search": "חיפוש קבצים…",
+    "fm.all": "הכול",
+    "fm.upload": "העלאת קבצים",
+    "fm.sort.new": "מהחדש לישן",
+    "fm.sort.old": "מהישן לחדש",
+    "fm.sort.name": "לפי שם",
+    "fm.select": "בחירה",
+    "fm.selectall": "בחירת הכול",
+    "fm.download": "הורדה",
+    "fm.delete": "מחיקה",
+    "fm.empty": "אין כאן קבצים עדיין — העלו, גררו או ייבאו.",
+    "fm.count": "קבצים",
+    "fm.confirmdelete": "למחוק את הקבצים שנבחרו?",
+    "step.01": "המוצר שלך",
+    "step.02": "קונספט עיצוב",
+    "step.03": "מידע מוצר",
+    "step.04": "הדמיית תלת־ממד",
+    "step.05": "ארטוורק על הפריסה",
+    "st.task": "בחירת משימה",
+    "st.task.concept": "יצירת קונספט",
+    "st.task.concept.d": "כמה כיוונים יצירתיים, מדריכי סגנון וויז׳ואלים לבחירה.",
+    "st.task.ready": "עיצוב מקונספט מאושר",
+    "st.task.ready.d": "כבר יש קונספט? מדביקים ועוברים ישר לעיצוב.",
+    "st.task.guide": "קונספט ממדריך סגנון",
+    "st.task.guide.d": "עיצוב בשפה של מדריך מותג / דמות ברישיון שמור (הלו קיטי, דיסני…).",
+    "st.upload": "העלאת תמונת מוצר",
+    "st.replace": "החלפת תמונת המוצר",
+    "st.uploadhint": "JPG או PNG של המוצר האמיתי או האריזה הנוכחית.",
+    "st.send": "שליחה",
+    "st.render": "רינדור",
+    "st.rerender": "רינדור מחדש",
+    "st.place": "הצבת ארטוורק על הפריסה",
+    "st.regen": "ארטוורק מחדש",
+    "st.export": "ייצוא SVG שכבתי לאילוסטרייטור",
+    "st.packtype": "סוג אריזה",
+    "st.adddieline": "+ הוספת פריסה / דיי־ליין",
+    "st.master": "פריסת קרטון הובלה",
+    "st.addmaster": "+ הוספת פריסת קרטון הובלה",
+    "cust.title": "לקוחות",
+    "cust.kicker": "לקוחות",
+    "cust.search": "חיפוש לקוח…",
+    "cust.new": "+ לקוח חדש",
+    "cust.projects": "פרויקטים",
+    "cust.empty": "עוד אין לקוחות — מוסיפים את הראשון.",
+    "cust.form.title": "לקוח חדש",
+    "cust.form.name": "שם לקוח / חברה",
+    "cust.form.contact": "איש קשר",
+    "cust.form.email": "אימייל",
+    "cust.form.phone": "וואטסאפ / טלפון (כולל קידומת)",
+    "cust.form.notes": "הערות",
+    "cust.form.add": "הוספת לקוח",
+    "sty.title": "מדריכי סגנון",
+    "sty.sub": "מדריכי המותג שלכם, מדריכי דמויות ברישיון, ומדריכים שנשמרו מפרויקטים שאושרו.",
+    "sty.new": "+ מדריך סגנון חדש",
+    "sty.open": "פתיחה",
+    "sty.delete": "מחיקה",
+    "sty.empty": "עוד אין מדריכי סגנון.",
+    "sty.save": "שמירת מדריך סגנון",
+    "ideas.title": "צ׳אט רעיונות",
+    "ideas.sub": "יצירת קונספטים חופשית — גוררים תמונות ומתחילים פרויקט",
+    "ideas.start": "התחלת פרויקט מהצ׳אט",
+    "ideas.save": "שמירה לרעיונות",
+    "ideas.drop": "שחררו תמונות כאן",
+    "ideas.placeholder": "מותג, קטגוריה, טרנד או וייב… אפשר גם לגרור תמונות",
+    "ideas.opening": "היי! כאן מייצרים רעיונות חופשיים בלי מוצר. ספרו לי על מותג, קטגוריה או טרנד — ואציע קונספטים. אפשר גם לגרור תמונות לתוך הצ׳אט. בסוף מתחילים פרויקט ישירות מהצ׳אט או שומרים כרעיונות.",
+    "auth.welcome": "ברוכים השבים",
+    "auth.create": "יצירת חשבון",
+    "auth.subin": "התחברו כדי להמשיך לפרויקטים שלכם.",
+    "auth.subup": "חשבון אחד לכל תהליך האריזה.",
+    "auth.google": "המשך עם Google",
+    "auth.or": "או עם אימייל",
+    "auth.email": "אימייל",
+    "auth.password": "סיסמה",
+    "auth.signin": "התחברות",
+    "auth.signup": "יצירת חשבון",
+    "auth.toUp": "חדשים כאן? צרו חשבון",
+    "auth.toIn": "יש חשבון? התחברו",
+    "auth.access": "כניסה לסטודיו",
+    "auth.join": "הצטרפות לסטודיו",
+    "auth.brand": "הסטודיו שמנהל את כל תהליך האריזה — מהקונספט ועד הקובץ המוכן לדפוס.",
+  },
+} as const;
+
+export type DictKey = keyof (typeof DICT)["en"];
+
+type PrefsCtx = Prefs & {
+  set: (patch: Partial<Prefs>) => void;
+  t: (k: DictKey) => string;
+  dir: "ltr" | "rtl";
+};
+
+const Ctx = createContext<PrefsCtx>({
+  ...DEFAULTS,
+  set: () => {},
+  t: (k) => DICT.en[k] ?? k,
+  dir: "ltr",
+});
+
+function applyToDocument(p: Prefs) {
+  const el = document.documentElement;
+  el.lang = p.lang;
+  el.dir = p.lang === "he" ? "rtl" : "ltr";
+  el.classList.toggle("neon", p.theme === "neon");
+  const accent = ACCENTS.find((a) => a.id === p.accent) ?? ACCENTS[0];
+  el.style.setProperty("--cut", accent.cut);
+  el.style.setProperty("--cut-soft", accent.soft);
+  const font = FONTS.find((f) => f.id === p.font) ?? FONTS[0];
+  el.style.setProperty("--font-sans", font.stack);
+  el.style.setProperty("--font-display", font.stack);
+}
+
+export function PrefsProvider({ children }: { children: ReactNode }) {
+  const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
+
+  // Load saved prefs after hydration (SSR can't see localStorage)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) setPrefs({ ...DEFAULTS, ...(JSON.parse(raw) as Partial<Prefs>) });
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    applyToDocument(prefs);
+    try {
+      localStorage.setItem(KEY, JSON.stringify(prefs));
+    } catch {
+      /* ignore */
+    }
+  }, [prefs]);
+
+  const value: PrefsCtx = {
+    ...prefs,
+    set: (patch) => setPrefs((p) => ({ ...p, ...patch })),
+    t: (k) => DICT[prefs.lang][k] ?? DICT.en[k] ?? k,
+    dir: prefs.lang === "he" ? "rtl" : "ltr",
+  };
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+}
+
+export function usePrefs() {
+  return useContext(Ctx);
+}

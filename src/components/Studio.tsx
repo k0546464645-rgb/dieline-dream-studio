@@ -24,7 +24,72 @@ import { ItemsImport } from "@/components/ItemsImport";
 import { VoiceButton } from "@/components/VoiceButton";
 import { AttachmentStrip, useChatAttachments, useImageDrop } from "@/components/ChatAttachments";
 import { imageFilesFrom } from "@/lib/chat-images";
-import { ImagePlus } from "lucide-react";
+import { GripVertical, ImagePlus } from "lucide-react";
+import { usePrefs } from "@/lib/prefs";
+
+/** Drag-to-reorder wrapper for the step windows; order persists per column in localStorage. */
+function SortableSteps({ group, className, children }: { group: string; className?: string | undefined; children: React.ReactNode }) {
+  const items = React.Children.toArray(children) as React.ReactElement[];
+  const ids = items.map((c) => String(c.key));
+  const [order, setOrder] = useState<string[]>(ids);
+  const dragId = useRef<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("ds-step-order") ?? "{}") as Record<string, string[]>;
+      const s = saved[group];
+      if (Array.isArray(s)) setOrder([...s.filter((k) => ids.includes(k)), ...ids.filter((k) => !s.includes(k))]);
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function persist(o: string[]) {
+    setOrder(o);
+    try {
+      const saved = JSON.parse(localStorage.getItem("ds-step-order") ?? "{}") as Record<string, string[]>;
+      saved[group] = o;
+      localStorage.setItem("ds-step-order", JSON.stringify(saved));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const byKey = new Map(items.map((c) => [String(c.key), c]));
+  return (
+    <div className={className}>
+      {order.map((k) => {
+        const child = byKey.get(k);
+        if (!child) return null;
+        return (
+          <div
+            key={k}
+            draggable
+            onDragStart={(e) => {
+              dragId.current = k;
+              e.dataTransfer.effectAllowed = "move";
+            }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const from = dragId.current;
+              if (!from || from === k) return;
+              const next = order.filter((x) => x !== from);
+              next.splice(next.indexOf(k), 0, from);
+              persist(next);
+              dragId.current = null;
+            }}
+            className="group/step relative"
+          >
+            <GripVertical className="absolute end-2 top-4 z-10 size-4 cursor-grab text-muted-foreground opacity-0 transition-opacity group-hover/step:opacity-100" />
+            {child}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
@@ -125,6 +190,7 @@ export function Studio({
   onInstructionDone?: () => void;
   onFilesChanged?: () => void;
 }) {
+  const { t } = usePrefs();
   const [product, setProduct] = useState<string>();
   const [productFile, setProductFile] = useState<File>();
   const [messages, setMessages] = useState<ChatMsg[]>(Array.isArray(project.messages) ? (project.messages as ChatMsg[]) : []);
@@ -544,8 +610,8 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
         }
       />
       <main className="grid gap-6 lg:grid-cols-[1.05fr_1fr]">
-        <div className="flex flex-col gap-6">
-          <Step n="01" title="Your product">
+        <SortableSteps group="left" className="flex flex-col gap-6">
+          <Step key="product" n="01" title={t("step.01")}>
             <label className="flex cursor-pointer items-center gap-4">
               <div className="bg-grid flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
                 {product ? (
@@ -555,8 +621,8 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 )}
               </div>
               <div className="text-sm">
-                <p className="font-medium">{product ? "Replace product photo" : "Upload a product photo"}</p>
-                <p className="text-muted-foreground">JPG or PNG of the real product or its current pack.</p>
+                <p className="font-medium">{product ? t("st.replace") : t("st.upload")}</p>
+                <p className="text-muted-foreground">{t("st.uploadhint")}</p>
               </div>
               <input
                 type="file"
@@ -582,13 +648,13 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </div>
             {product && (
               <div className="mt-5">
-                <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Choose a task</p>
+                <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">{t("st.task")}</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {(
                     [
-                      ["concept", "Create a concept", "Get several creative directions, style guides and visuals to choose from."],
-                      ["ready", "Design from approved concept", "Already have a concept? Paste it and go straight to the design."],
-                      ["guide", "Concept from a style guide", "Design in the language of a saved brand / licensed character guide (Hello Kitty, Disney…)."],
+                      ["concept", t("st.task.concept"), t("st.task.concept.d")],
+                      ["ready", t("st.task.ready"), t("st.task.ready.d")],
+                      ["guide", t("st.task.guide"), t("st.task.guide.d")],
                     ] as const
                   ).map(([k, t, d]) => (
                     <button
@@ -679,7 +745,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             )}
           </Step>
 
-          <Step n="02" title="Design concept">
+          <Step key="concept" n="02" title={t("step.02")}>
             <div
               ref={chatBox}
               className={`relative flex h-[460px] flex-col rounded-lg transition-shadow ${dropOver ? "ring-2 ring-accent" : ""}`}
@@ -773,23 +839,23 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 />
                 <VoiceButton className="self-end" disabled={thinking} onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />
                 <Button onClick={() => send()} disabled={thinking} className="h-auto self-stretch">
-                  {thinking ? "…" : "Send"}
+                  {thinking ? "…" : t("st.send")}
                 </Button>
               </div>
             </div>
           </Step>
 
-          <Step n="03" title="Product information">
+          <Step key="info" n="03" title={t("step.03")}>
             <div className="mb-3">
               <ItemsImport onPick={(patch) => setInfo((cur) => ({ ...cur, ...patch }))} />
             </div>
             <InfoForm value={info} onChange={setInfo} />
           </Step>
-        </div>
+        </SortableSteps>
 
-        <div className="flex flex-col gap-6">
-          <Step n="04" title="3D mockup">
-            <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Packaging type</p>
+        <SortableSteps group="right" className="flex flex-col gap-6">
+          <Step key="mockup" n="04" title={t("step.04")}>
+            <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">{t("st.packtype")}</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {PACK_TYPES.map(([k, label]) => (
                 <button
@@ -820,7 +886,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                       onClick={() => renderMockup(view)}
                       disabled={mockBusy !== null || !concept || !productFile}
                     >
-                      {mockBusy === view ? "…" : mockups[view] ? "Re-render" : "Render"}
+                      {mockBusy === view ? "…" : mockups[view] ? t("st.rerender") : t("st.render")}
                     </StepButton>
                     {mockups[view] && mockFinal[view] && (
                       <Button size="sm" variant="outline" onClick={() => download(mockups[view]!, `mockup-${view}.png`)}>
@@ -833,14 +899,14 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </div>
           </Step>
 
-          <Step n="05" title="Artwork on your dieline">
+          <Step key="dieline" n="05" title={t("step.05")}>
             <label className="block cursor-pointer">
               <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
                 {dieline ? (
                   <img src={dieline} alt="Dieline" className="h-full w-full object-contain" />
                 ) : (
                   <p className="px-4 text-center font-mono text-xs text-muted-foreground">
-                    + Add a dieline / layout
+                    {t("st.adddieline")}
                     <br />
                     PDF · AI · PNG · JPG
                   </p>
@@ -860,12 +926,12 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             )}
             <div className="mt-4 flex flex-wrap gap-2">
               <StepButton n="05" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
-                {artBusy ? "Placing artwork…" : art ? "Regenerate artwork" : "Place artwork on dieline"}
+                {artBusy ? "Placing artwork…" : art ? t("st.regen") : t("st.place")}
               </StepButton>
               {art && artFinal && (
                 <>
                   <Button onClick={exportSvg} disabled={svgBusy}>
-                    Export layered SVG for Illustrator
+                    {t("st.export")}
                   </Button>
                   <Button variant="outline" onClick={() => download(art, "artwork.png")}>
                     PNG
@@ -911,7 +977,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </p>
             <div className="mt-5 border-t pt-4">
               <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">
-                Shipping carton dieline · פריסת קרטון הובלה
+                {t("st.master")}
               </p>
               <label className="block cursor-pointer">
                 <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
@@ -919,7 +985,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                     <img src={masterDieline} alt="Master carton dieline" className="h-full w-full object-contain" />
                   ) : (
                     <p className="px-4 text-center font-mono text-xs text-muted-foreground">
-                      + Add a master carton dieline / layout
+                      {t("st.addmaster")}
                       <br />
                       PDF · AI · PNG · JPG
                     </p>
@@ -949,7 +1015,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
               </div>
             </div>
           </Step>
-        </div>
+        </SortableSteps>
       </main>
     </div>
   );
