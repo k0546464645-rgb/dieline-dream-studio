@@ -35,6 +35,22 @@ function Step({ n, title, children }: { n: string; title: string; children: Reac
   );
 }
 
+function StepButton({
+  n,
+  children,
+  className,
+  ...props
+}: React.ComponentProps<typeof Button> & { n: string }) {
+  return (
+    <Button variant="cut" className={`gap-2.5 ${className ?? ""}`} {...props}>
+      <span className="grid size-5 place-items-center rounded-full bg-accent-foreground/20 font-mono text-[10px] font-bold">
+        {n}
+      </span>
+      {children}
+    </Button>
+  );
+}
+
 const PACK_TYPES = [
   ["window", "Color box with window", "packed in a printed color box with a transparent window showing the product inside"],
   ["display", "Display box", "standing in a retail counter display box with a printed header card"],
@@ -611,9 +627,9 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                         {refFile ? `Reference: ${refFile.name}` : "+ Reference design image (optional)"}
                         <input type="file" accept="image/*" className="hidden" onChange={(e) => setRefFile(e.target.files?.[0])} />
                       </label>
-                      <Button variant="cut" onClick={designFromReady} disabled={thinking}>
+                      <StepButton n="01" onClick={designFromReady} disabled={thinking}>
                         Design the product
-                      </Button>
+                      </StepButton>
                     </div>
                   </div>
                 )}
@@ -675,9 +691,9 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                   </div>
                 ))}
                 {(options.length > 0 || approved) && !thinking && (
-                  <Button variant="cut" className="w-full" onClick={() => setBoardOpen(true)}>
+                  <StepButton n="02" className="w-full" onClick={() => setBoardOpen(true)}>
                     {approved ? "View design on the board" : `Open design board · ${options.length} directions`}
-                  </Button>
+                  </StepButton>
                 )}
                 {approved && !thinking && (
                   <div className="flex items-center justify-between gap-2 rounded-lg border border-accent bg-background px-3 py-2">
@@ -744,14 +760,14 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                     {view === "front" ? "Front · קדימה" : "Back · אחורה"}
                   </p>
                   <div className="mt-2 flex justify-center gap-2">
-                    <Button
+                    <StepButton
+                      n="04"
                       size="sm"
-                      variant="cut"
                       onClick={() => renderMockup(view)}
                       disabled={mockBusy !== null || !concept || !productFile}
                     >
                       {mockBusy === view ? "…" : mockups[view] ? "Re-render" : "Render"}
-                    </Button>
+                    </StepButton>
                     {mockups[view] && mockFinal[view] && (
                       <Button size="sm" variant="outline" onClick={() => download(mockups[view]!, `mockup-${view}.png`)}>
                         PNG
@@ -789,9 +805,9 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
               </div>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="cut" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
+              <StepButton n="05" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
                 {artBusy ? "Placing artwork…" : art ? "Regenerate artwork" : "Place artwork on dieline"}
-              </Button>
+              </StepButton>
               {art && artFinal && (
                 <>
                   <Button onClick={exportSvg} disabled={svgBusy}>
@@ -868,9 +884,9 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 </div>
               )}
               <div className="mt-4 flex flex-wrap gap-2">
-                <Button variant="cut" onClick={() => renderMasterArtwork()} disabled={masterArtBusy || !masterDieline || !concept}>
+                <StepButton n="05" onClick={() => renderMasterArtwork()} disabled={masterArtBusy || !masterDieline || !concept}>
                   {masterArtBusy ? "Placing artwork…" : masterArt ? "Regenerate carton artwork" : "Place artwork on carton dieline"}
-                </Button>
+                </StepButton>
                 {masterArt && masterArtFinal && (
                   <Button variant="outline" onClick={() => download(masterArt, `${masterDielineName || "master-carton"}-artwork.png`)}>
                     PNG
