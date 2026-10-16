@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { requireStudio } from "@/lib/require-studio.server";
 
-type Msg = { role: "user" | "assistant"; text: string };
+type Msg = { role: "user" | "assistant"; text: string; images?: string[] };
 
 const SYSTEM = `You are a senior packaging designer and creative director.
 First carefully review the uploaded product photo (shape, material, category, current branding).
