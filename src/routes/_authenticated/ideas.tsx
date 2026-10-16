@@ -33,7 +33,7 @@ function IdeasChat() {
   const chatEnd = useRef<HTMLDivElement>(null);
 
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant" && m.text.trim())?.text ?? "";
-  const hasConcepts = parseConcepts(lastAssistant).length > 0 && messages.length > 1;
+  const hasConcepts = !thinking && parseConcepts(lastAssistant).length > 0 && messages.length > 1;
 
   async function send() {
     const text = draft.trim();

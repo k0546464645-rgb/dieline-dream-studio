@@ -44,7 +44,7 @@ Research current packaging trends in exactly these domains and propose 3 FRESH c
 Start EACH with a line exactly in the form "## Concept N: <Name>". For each: one-line big idea, then palette, typography, finish and why it fits the trend. Be concise and specific. Do not repeat the approved directions above — build beyond them.`;
       const msgs: ChatMsg[] = [{ role: "user", text: prompt }];
       let full = "";
-      await streamConcept(msgs, undefined, {}, (d) => (full += d));
+      await streamConcept(msgs, undefined, { autopilot: true }, (d) => (full += d));
       const parsed = parseConcepts(full).slice(0, 3);
       if (parsed.length === 0) throw new Error("Autopilot returned no ideas");
       const { data: u } = await supabase.auth.getUser();

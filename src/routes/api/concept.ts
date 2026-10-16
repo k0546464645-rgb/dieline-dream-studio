@@ -22,11 +22,12 @@ export const Route = createFileRoute("/api/concept")({
         if (denied) return denied;
         const apiKey = process.env["LOVABLE_API_KEY"];
         if (!apiKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
-        const { messages, productImage, styleGuide, learnings } = (await request.json()) as {
+        const { messages, productImage, styleGuide, learnings, autopilot } = (await request.json()) as {
           messages: Msg[];
           productImage?: string;
           styleGuide?: { text: string; images: string[] };
           learnings?: string;
+          autopilot?: boolean;
         };
         let instructions = SYSTEM;
         if (styleGuide?.text) {
@@ -40,7 +41,9 @@ STYLE GUIDE:\n${styleGuide.text.slice(0, 6000)}`;
         if (!Array.isArray(messages) || messages.length === 0) {
           return new Response("No messages", { status: 400 });
         }
-        if (!productImage) {
+        if (autopilot) {
+          instructions += `\n\nAUTOPILOT MODE: never ask clarifying questions and never describe uncertainty. Always output exactly 3 concepts, each starting with "## Concept N: <Name>". If the provided project list is vague or meaningless, ignore it and pick trending consumer packaged-goods categories instead.`;
+        } else if (!productImage) {
           instructions += `\n\nNO product photo was provided in this session. Do not describe or assume a specific photo — design from the user's written description. If the product type or category is unclear, ask one short clarifying question before proposing concepts.`;
         }
         const input = messages.map((m, i) => {
