@@ -20,6 +20,7 @@ import { Route as ApiConceptRouteImport } from './routes/api/concept'
 import { Route as ApiEditImageRouteImport } from './routes/api/edit-image'
 import { Route as ApiExtractRouteImport } from './routes/api/extract'
 import { Route as ApiQcRouteImport } from './routes/api/qc'
+import { Route as ApiTranscribeRouteImport } from './routes/api/transcribe'
 import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
 import { Route as AuthenticatedProjectsIdRouteImport } from './routes/_authenticated/projects.$id'
 
@@ -77,6 +78,11 @@ const ApiQcRoute = ApiQcRouteImport.update({
   path: '/api/qc',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTranscribeRoute = ApiTranscribeRouteImport.update({
+  id: '/api/transcribe',
+  path: '/api/transcribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApproveTokenRoute = ApproveTokenRouteImport.update({
   id: '/approve/$token',
   path: '/approve/$token',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/qc': typeof ApiQcRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
 }
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/qc': typeof ApiQcRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/projects/$id': typeof AuthenticatedProjectsIdRoute
 }
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
   '/api/qc': typeof ApiQcRoute
+  '/api/transcribe': typeof ApiTranscribeRoute
   '/approve/$token': typeof ApproveTokenRoute
   '/_authenticated/projects/$id': typeof AuthenticatedProjectsIdRoute
 }
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/api/edit-image'
     | '/api/extract'
     | '/api/qc'
+    | '/api/transcribe'
     | '/approve/$token'
     | '/projects/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/api/edit-image'
     | '/api/extract'
     | '/api/qc'
+    | '/api/transcribe'
     | '/approve/$token'
     | '/projects/$id'
   id:
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/api/edit-image'
     | '/api/extract'
     | '/api/qc'
+    | '/api/transcribe'
     | '/approve/$token'
     | '/_authenticated/projects/$id'
   fileRoutesById: FileRoutesById
@@ -186,6 +198,7 @@ export interface RootRouteChildren {
   ApiEditImageRoute: typeof ApiEditImageRoute
   ApiExtractRoute: typeof ApiExtractRoute
   ApiQcRoute: typeof ApiQcRoute
+  ApiTranscribeRoute: typeof ApiTranscribeRoute
   ApproveTokenRoute: typeof ApproveTokenRoute
 }
 
@@ -268,6 +281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiQcRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/transcribe': {
+      id: '/api/transcribe'
+      path: '/api/transcribe'
+      fullPath: '/api/transcribe'
+      preLoaderRoute: typeof ApiTranscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/approve/$token': {
       id: '/approve/$token'
       path: '/approve/$token'
@@ -312,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEditImageRoute: ApiEditImageRoute,
   ApiExtractRoute: ApiExtractRoute,
   ApiQcRoute: ApiQcRoute,
+  ApiTranscribeRoute: ApiTranscribeRoute,
   ApproveTokenRoute: ApproveTokenRoute,
 }
 export const routeTree = rootRouteImport

@@ -21,6 +21,7 @@ import {
 import { DesignBoard, parseConcepts, type ConceptOption } from "@/components/DesignBoard";
 import { InfoForm, LANGUAGES, emptyInfo, infoPrompt } from "@/components/InfoForm";
 import { ItemsImport } from "@/components/ItemsImport";
+import { VoiceButton } from "@/components/VoiceButton";
 
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
@@ -718,6 +719,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                   placeholder="Brand name, audience, mood, must-have info…"
                   className="min-h-[52px] resize-none bg-background"
                 />
+                <VoiceButton className="self-end" disabled={thinking} onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />
                 <Button onClick={() => send()} disabled={thinking} className="h-auto self-stretch">
                   {thinking ? "…" : "Send"}
                 </Button>
