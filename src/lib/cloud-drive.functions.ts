@@ -20,8 +20,8 @@ const input = z.object({
 type AuthContext = { supabase: { rpc: (fn: "has_role", args: { _user_id: string; _role: "studio" }) => Promise<{ data: unknown }> }; userId: string };
 
 async function assertStudio(context: AuthContext) {
-  const { data: ok } = await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "studio" });
-  if (!ok) throw new Error("No studio access");
+  const result = (await context.supabase.rpc("has_role", { _user_id: context.userId, _role: "studio" })) as { data: unknown };
+  if (!result.data) throw new Error("No studio access");
 }
 
 function gateway(provider: DriveProvider): { base: string; key: string } {
