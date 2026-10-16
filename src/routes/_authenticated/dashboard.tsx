@@ -122,7 +122,7 @@ function Dashboard() {
                   </span>
                   <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">0{i + 1}</span>
                 </div>
-                <p className="mt-3 font-mono text-[11px] uppercase text-muted-foreground">{s.label}</p>
+                <p className="mt-3 font-mono text-[11px] uppercase text-muted-foreground">{t(`stage.${s.id}` as DictKey)}</p>
                 <p className="text-2xl font-bold">{count}</p>
               </div>
             );
@@ -158,18 +158,18 @@ function Dashboard() {
                 </div>
                 <p className="text-sm text-muted-foreground">{[p.customer_name, p.supplier].filter(Boolean).join(" · ") || "—"}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
-                  <span className="rounded bg-secondary px-2 py-0.5">{stageLabel(p.stage)}</span>
+                  <span className="rounded bg-secondary px-2 py-0.5">{t(`stage.${p.stage}` as DictKey)}</span>
                   <span className="inline-flex items-center gap-1 rounded bg-secondary px-2 py-0.5">
                     <TypeIcon className="size-3 text-accent" />
-                    {projectTypeLabel(p.project_type)}
+                    {t(`ptype.${p.project_type}` as DictKey)}
                   </span>
-                  {data?.pending.has(p.id) && <span className="rounded bg-accent px-2 py-0.5 text-accent-foreground">awaiting reply</span>}
-                  {p.status === "changes_requested" && <span className="rounded border border-accent px-2 py-0.5 text-accent">changes requested</span>}
+                  {data?.pending.has(p.id) && <span className="rounded bg-accent px-2 py-0.5 text-accent-foreground">{t("dash.awaiting")}</span>}
+                  {p.status === "changes_requested" && <span className="rounded border border-accent px-2 py-0.5 text-accent">{t("dash.changes")}</span>}
                 </div>
               </Link>
             );
           })}
-          {data && list.length === 0 && <p className="text-sm text-muted-foreground">No projects yet — create the first one.</p>}
+          {data && list.length === 0 && <p className="text-sm text-muted-foreground">{t("dash.empty")}</p>}
         </div>
 
         <IdeasStrip />
@@ -178,11 +178,11 @@ function Dashboard() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="bg-background">
           <DialogHeader>
-            <DialogTitle>New project</DialogTitle>
+            <DialogTitle>{t("dash.new")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
             <div className="space-y-1">
-              <Label>Project type · סוג הפרויקט</Label>
+              <Label>{t("dash.type")}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {PROJECT_TYPES.map((t) => {
                   const Icon = TYPE_ICONS[t.id] ?? Package;
@@ -195,9 +195,9 @@ function Dashboard() {
                     >
                       <p className="flex items-center gap-1.5 text-sm font-semibold">
                         <Icon className="size-4 text-accent" />
-                        {t.label}
+                        {t(`ptype.${t.id}` as DictKey)}
                       </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{t.hint}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{t(`ptype.${t.id}.hint` as DictKey)}</p>
                     </button>
                   );
                 })}
@@ -205,27 +205,27 @@ function Dashboard() {
             </div>
             {(
               [
-                ["name", "Project / product name"],
-                ["customer_name", "Customer"],
-                ["customer_email", "Customer email"],
-                ["customer_phone", "Customer WhatsApp / phone (with country code)"],
-                ["supplier", "Supplier / factory"],
-                ["supplier_item", "Supplier item / model no."],
+                ["name", "f.name"],
+                ["customer_name", "f.customer"],
+                ["customer_email", "f.email"],
+                ["customer_phone", "f.phone"],
+                ["supplier", "f.supplier"],
+                ["supplier_item", "f.item"],
               ] as const
             ).map(([k, l]) => (
               <div key={k} className="space-y-1">
-                <Label>{l}</Label>
+                <Label>{t(l)}</Label>
                 <Input value={form[k]} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className="bg-card" />
               </div>
             ))}
-            <Button variant="cut" onClick={create}>Create project</Button>
+            <Button variant="cut" onClick={create}>{t("dash.create")}</Button>
           </div>
         </DialogContent>
       </Dialog>
       <Dialog open={!!renaming} onOpenChange={(o) => !o && setRenaming(null)}>
         <DialogContent className="bg-background">
           <DialogHeader>
-            <DialogTitle>Rename project · שינוי שם פרויקט</DialogTitle>
+            <DialogTitle>{t("dash.rename")}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-3">
             <Input
@@ -235,7 +235,7 @@ function Dashboard() {
               onKeyDown={(e) => e.key === "Enter" && renameProject()}
               className="bg-card"
             />
-            <Button variant="cut" onClick={renameProject}>Save name</Button>
+            <Button variant="cut" onClick={renameProject}>{t("dash.savename")}</Button>
           </div>
         </DialogContent>
       </Dialog>
