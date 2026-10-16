@@ -24,7 +24,72 @@ import { ItemsImport } from "@/components/ItemsImport";
 import { VoiceButton } from "@/components/VoiceButton";
 import { AttachmentStrip, useChatAttachments, useImageDrop } from "@/components/ChatAttachments";
 import { imageFilesFrom } from "@/lib/chat-images";
-import { ImagePlus } from "lucide-react";
+import { GripVertical, ImagePlus } from "lucide-react";
+import { usePrefs } from "@/lib/prefs";
+
+/** Drag-to-reorder wrapper for the step windows; order persists per column in localStorage. */
+function SortableSteps({ group, className, children }: { group: string; className?: string | undefined; children: React.ReactNode }) {
+  const items = React.Children.toArray(children) as React.ReactElement[];
+  const ids = items.map((c) => String(c.key));
+  const [order, setOrder] = useState<string[]>(ids);
+  const dragId = useRef<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem("ds-step-order") ?? "{}") as Record<string, string[]>;
+      const s = saved[group];
+      if (Array.isArray(s)) setOrder([...s.filter((k) => ids.includes(k)), ...ids.filter((k) => !s.includes(k))]);
+    } catch {
+      /* ignore */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function persist(o: string[]) {
+    setOrder(o);
+    try {
+      const saved = JSON.parse(localStorage.getItem("ds-step-order") ?? "{}") as Record<string, string[]>;
+      saved[group] = o;
+      localStorage.setItem("ds-step-order", JSON.stringify(saved));
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const byKey = new Map(items.map((c) => [String(c.key), c]));
+  return (
+    <div className={className}>
+      {order.map((k) => {
+        const child = byKey.get(k);
+        if (!child) return null;
+        return (
+          <div
+            key={k}
+            draggable
+            onDragStart={(e) => {
+              dragId.current = k;
+              e.dataTransfer.effectAllowed = "move";
+            }}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const from = dragId.current;
+              if (!from || from === k) return;
+              const next = order.filter((x) => x !== from);
+              next.splice(next.indexOf(k), 0, from);
+              persist(next);
+              dragId.current = null;
+            }}
+            className="group/step relative"
+          >
+            <GripVertical className="absolute end-2 top-4 z-10 size-4 cursor-grab text-muted-foreground opacity-0 transition-opacity group-hover/step:opacity-100" />
+            {child}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
@@ -125,6 +190,7 @@ export function Studio({
   onInstructionDone?: () => void;
   onFilesChanged?: () => void;
 }) {
+  const { t } = usePrefs();
   const [product, setProduct] = useState<string>();
   const [productFile, setProductFile] = useState<File>();
   const [messages, setMessages] = useState<ChatMsg[]>(Array.isArray(project.messages) ? (project.messages as ChatMsg[]) : []);
