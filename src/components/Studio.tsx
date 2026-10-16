@@ -610,8 +610,8 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
         }
       />
       <main className="grid gap-6 lg:grid-cols-[1.05fr_1fr]">
-        <div className="flex flex-col gap-6">
-          <Step n="01" title="Your product">
+        <SortableSteps group="left" className="flex flex-col gap-6">
+          <Step key="product" n="01" title={t("step.01")}>
             <label className="flex cursor-pointer items-center gap-4">
               <div className="bg-grid flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
                 {product ? (
@@ -745,7 +745,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             )}
           </Step>
 
-          <Step n="02" title="Design concept">
+          <Step key="concept" n="02" title={t("step.02")}>
             <div
               ref={chatBox}
               className={`relative flex h-[460px] flex-col rounded-lg transition-shadow ${dropOver ? "ring-2 ring-accent" : ""}`}
@@ -845,16 +845,16 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </div>
           </Step>
 
-          <Step n="03" title="Product information">
+          <Step key="info" n="03" title={t("step.03")}>
             <div className="mb-3">
               <ItemsImport onPick={(patch) => setInfo((cur) => ({ ...cur, ...patch }))} />
             </div>
             <InfoForm value={info} onChange={setInfo} />
           </Step>
-        </div>
+        </SortableSteps>
 
-        <div className="flex flex-col gap-6">
-          <Step n="04" title="3D mockup">
+        <SortableSteps group="right" className="flex flex-col gap-6">
+          <Step key="mockup" n="04" title={t("step.04")}>
             <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Packaging type</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {PACK_TYPES.map(([k, label]) => (
@@ -899,7 +899,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </div>
           </Step>
 
-          <Step n="05" title="Artwork on your dieline">
+          <Step key="dieline" n="05" title={t("step.05")}>
             <label className="block cursor-pointer">
               <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
                 {dieline ? (
@@ -1015,7 +1015,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
               </div>
             </div>
           </Step>
-        </div>
+        </SortableSteps>
       </main>
     </div>
   );
