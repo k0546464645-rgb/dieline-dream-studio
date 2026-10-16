@@ -18,7 +18,8 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { PROJECT_TYPES, projectTypeLabel, signedUrls, stageLabel, STAGES } from "@/lib/storage";
+import { PROJECT_TYPES, signedUrls, STAGES } from "@/lib/storage";
+import { usePrefs, type DictKey } from "@/lib/prefs";
 import { IdeasStrip } from "@/components/IdeasStrip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +47,7 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
 };
 
 function Dashboard() {
+  const { t } = usePrefs();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
