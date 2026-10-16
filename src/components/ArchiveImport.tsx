@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 type Entry = { name: string; blob: Blob };
 
-const MAX_SIZE = 45 * 1024 * 1024; // bucket limit is 50 MB
+export const MAX_SIZE = 45 * 1024 * 1024; // bucket limit is 50 MB
 
 const MIME: Record<string, string> = {
   pdf: "application/pdf",
@@ -27,7 +27,7 @@ const MIME: Record<string, string> = {
 };
 
 /** Guess which project folder section the file belongs to, from its name/extension. */
-function guessKind(name: string): string {
+export function guessKind(name: string): string {
   const n = name.toLowerCase();
   const ext = n.split(".").pop() ?? "";
   if (/(dieline|die-line|diecut|die-cut|layout|פריסה)/.test(n) || ["pdf", "ai", "eps", "dxf", "svg"].includes(ext)) return "dieline";
