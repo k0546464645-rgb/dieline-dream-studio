@@ -89,10 +89,10 @@ export function CloudImport({ projectId, onDone }: { projectId: string; onDone: 
       }
       setBusy(`Importing ${done + 1}/${chosen.length}: ${item.name}`);
       try {
-        const file = await download({ data: { provider, fileId: item.id, name: item.name } });
+        const file = await download({ data: { provider, fileId: item.id, name: item.name, mimeType: item.mimeType } });
         const blob = base64ToBlob(file.base64, file.mimeType);
-        const path = await uploadToStudio(`projects/${projectId}/uploads`, blob, item.name);
-        const { error } = await supabase.from("project_files").insert({ project_id: projectId, kind: guessKind(item.name), label: item.name, path });
+        const path = await uploadToStudio(`projects/${projectId}/uploads`, blob, file.name);
+        const { error } = await supabase.from("project_files").insert({ project_id: projectId, kind: guessKind(file.name), label: file.name, path });
         if (error) throw error;
         done++;
       } catch (e) {

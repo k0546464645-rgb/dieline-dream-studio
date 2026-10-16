@@ -115,5 +115,5 @@ export const downloadDriveItem = createServerFn({ method: "POST" })
     const bytes = new Uint8Array(buf);
     const chunk = 0x8000;
     for (let i = 0; i < bytes.length; i += chunk) binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
-    return { name: data.name, mimeType: res.headers.get("content-type") ?? "", base64: btoa(binary) };
+    return { name, mimeType: res.headers.get("content-type") ?? "", base64: btoa(binary) };
   });
