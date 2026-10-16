@@ -17,15 +17,16 @@ export const Route = createFileRoute("/_authenticated")({
   component: Layout,
 });
 
-const NAV = [
-  { to: "/dashboard", label: "Projects", icon: FolderKanban },
-  { to: "/ideas", label: "Ideas", icon: Lightbulb },
-  { to: "/styles", label: "Style guides", icon: SwatchBook },
-  { to: "/customers", label: "Customers", icon: Users },
-] as const;
+const NAV: { to: string; key: DictKey; icon: typeof FolderKanban }[] = [
+  { to: "/dashboard", key: "nav.projects", icon: FolderKanban },
+  { to: "/ideas", key: "nav.ideas", icon: Lightbulb },
+  { to: "/styles", key: "nav.styles", icon: SwatchBook },
+  { to: "/customers", key: "nav.customers", icon: Users },
+];
 
 function Layout() {
   const { user, isStudio } = Route.useRouteContext();
+  const { t } = usePrefs();
   const navigate = useNavigate();
   const qc = useQueryClient();
   async function signOut() {
@@ -44,7 +45,7 @@ function Layout() {
           <span className="hidden text-lg font-extrabold tracking-tight md:block">Dieline Studio</span>
         </Link>
         <nav className="mt-2 flex flex-1 flex-col gap-1 px-2">
-          {NAV.map(({ to, label, icon: Icon }) => (
+          {NAV.map(({ to, key, icon: Icon }) => (
             <Link
               key={to}
               to={to}
@@ -52,15 +53,16 @@ function Layout() {
               activeProps={{ className: "bg-paper/10 text-paper font-semibold shadow-[inset_2px_0_0_var(--cut)]" }}
             >
               <Icon className="size-4 shrink-0" />
-              <span className="hidden md:block">{label}</span>
+              <span className="hidden md:block">{t(key)}</span>
             </Link>
           ))}
         </nav>
         <div className="border-t border-paper/10 px-2 py-3">
+          <StudioSettings />
           <p className="hidden truncate px-3 pb-2 font-mono text-[11px] text-paper/40 md:block">{user.email}</p>
           <Button size="sm" variant="ghost" onClick={signOut} className="w-full justify-center text-paper/60 hover:bg-paper/10 hover:text-paper md:justify-start">
             <LogOut className="size-4" />
-            <span className="hidden md:block">Sign out</span>
+            <span className="hidden md:block">{t("nav.signout")}</span>
           </Button>
         </div>
       </aside>
@@ -69,10 +71,8 @@ function Layout() {
           <Outlet />
         ) : (
           <div className="mx-auto max-w-md px-6 py-20 text-center">
-            <h1 className="text-2xl font-bold">No studio access</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              This studio is limited to its two team members. Ask the owner to give your account access.
-            </p>
+            <h1 className="text-2xl font-bold">{t("noaccess.title")}</h1>
+            <p className="mt-2 text-sm text-muted-foreground">{t("noaccess.body")}</p>
           </div>
         )}
       </div>
