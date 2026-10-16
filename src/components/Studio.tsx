@@ -718,6 +718,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                   placeholder="Brand name, audience, mood, must-have info…"
                   className="min-h-[52px] resize-none bg-background"
                 />
+                <VoiceButton className="self-end" disabled={thinking} onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />
                 <Button onClick={() => send()} disabled={thinking} className="h-auto self-stretch">
                   {thinking ? "…" : "Send"}
                 </Button>

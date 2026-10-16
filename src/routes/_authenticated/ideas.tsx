@@ -7,6 +7,7 @@ import { streamConcept, type ChatMsg } from "@/lib/studio-client";
 import { parseConcepts } from "@/lib/ideas";
 import { logActivity } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
+import { VoiceButton } from "@/components/VoiceButton";
 import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/ideas")({
@@ -149,6 +150,7 @@ function IdeasChat() {
           placeholder="A brand, category, trend or vibe… · מותג, קטגוריה, טרנד או וייב…"
           className="min-h-12 bg-card"
         />
+        <VoiceButton className="self-end" disabled={thinking} onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />
         <Button variant="cut" onClick={send} disabled={thinking || !draft.trim()} className="self-end">
           <Send className="size-4" />
         </Button>
