@@ -22,6 +22,9 @@ import { DesignBoard, parseConcepts, type ConceptOption } from "@/components/Des
 import { InfoForm, LANGUAGES, emptyInfo, infoPrompt } from "@/components/InfoForm";
 import { ItemsImport } from "@/components/ItemsImport";
 import { VoiceButton } from "@/components/VoiceButton";
+import { AttachmentStrip, useChatAttachments, useImageDrop } from "@/components/ChatAttachments";
+import { imageFilesFrom } from "@/lib/chat-images";
+import { ImagePlus } from "lucide-react";
 
 
 function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
@@ -148,6 +151,9 @@ export function Studio({
   const [approved, setApproved] = useState<string>(project.approved_concept ?? "");
   const [info, setInfo] = useState<PackInfo>({ ...emptyInfo, ...((project.info as Partial<PackInfo>) ?? {}) });
   const chatEnd = useRef<HTMLDivElement>(null);
+  const chatBox = useRef<HTMLDivElement>(null);
+  const { images: attachImages, addFiles, remove: removeAttach, clear: clearAttach } = useChatAttachments();
+  const dropOver = useImageDrop(chatBox, addFiles);
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
   const concept = approved || lastAssistant;
   const options = approved ? [] : parseConcepts(lastAssistant);
@@ -333,15 +339,18 @@ export function Studio({
     }
   }
 
-  async function send(override?: string, approve = false, productImage?: string) {
+  async function send(override?: string, approve = false, productImage?: string, attach?: string[]) {
+    const att = attach ?? (override ? undefined : attachImages.length ? attachImages : undefined);
     const text =
       override ||
       draft.trim() ||
+      (att?.length ? "Design using the attached reference images." : "") ||
       (messages.length === 0 ? "Propose 3 packaging design concepts for this product." : "");
     if (!text || thinking) return;
-    const next: ChatMsg[] = [...messages, { role: "user", text }];
+    const next: ChatMsg[] = [...messages, { role: "user", text, images: att?.length ? att : undefined }];
     setMessages([...next, { role: "assistant", text: "" }]);
     setDraft("");
+    if (att === attachImages) clearAttach();
     setThinking(true);
     let full = "";
     try {
@@ -671,8 +680,16 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
           </Step>
 
           <Step n="02" title="Design concept">
-            <div className="flex h-[460px] flex-col">
+            <div
+              ref={chatBox}
+              className={`relative flex h-[460px] flex-col rounded-lg transition-shadow ${dropOver ? "ring-2 ring-accent" : ""}`}
+            >
               <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+                {dropOver && (
+                  <p className="pointer-events-none sticky top-0 z-10 rounded-md bg-accent px-3 py-1 text-center font-mono text-[11px] uppercase tracking-widest text-accent-foreground">
+                    Drop images here · שחררו תמונות כאן
+                  </p>
+                )}
                 {messages.length === 0 && (
                   <p className="text-sm text-muted-foreground">
                     Describe the brand, audience and mood — or just press send to get three concepts.
@@ -688,6 +705,13 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                         : "max-w-full whitespace-pre-wrap rounded-lg border bg-background px-4 py-3 text-sm leading-relaxed"
                     }
                   >
+                    {m.images?.length ? (
+                      <div className="mb-2 flex flex-wrap gap-1.5">
+                        {m.images.map((src, j) => (
+                          <img key={j} src={src} alt="" className="size-16 rounded-md border object-cover" />
+                        ))}
+                      </div>
+                    ) : null}
                     {m.text || <span className="font-mono text-xs text-muted-foreground">thinking…</span>}
                   </div>
                 ))}
@@ -706,10 +730,38 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 )}
                 <div ref={chatEnd} />
               </div>
+              {attachImages.length > 0 && (
+                <div className="mt-3">
+                  <AttachmentStrip images={attachImages} onRemove={removeAttach} />
+                </div>
+              )}
               <div className="mt-3 flex gap-2">
+                <label
+                  title="Attach images · צירוף תמונות"
+                  className="grid size-11 cursor-pointer place-items-center self-end rounded-md border text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+                >
+                  <ImagePlus className="size-4" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => {
+                      addFiles(Array.from(e.target.files ?? []));
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
                 <Textarea
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
+                  onPaste={(e) => {
+                    const files = imageFilesFrom(e.clipboardData?.files);
+                    if (files.length) {
+                      e.preventDefault();
+                      addFiles(files);
+                    }
+                  }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
