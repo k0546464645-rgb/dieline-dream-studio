@@ -232,57 +232,7 @@ function ProjectPage() {
           <div className="space-y-6">
             <ArchiveImport projectId={id} onDone={() => qc.invalidateQueries({ queryKey: ["files", id] })} />
             <CloudImport projectId={id} onDone={() => qc.invalidateQueries({ queryKey: ["files", id] })} />
-            {grouped.map(([label, list]) => (
-              <section key={label}>
-                <h3 className="mb-2 font-semibold">{label} <span className="font-mono text-xs text-muted-foreground">({list.length})</span></h3>
-                <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
-                  {list.map((f) => (
-                    <a key={f.id} href={f.url ?? "#"} target="_blank" rel="noreferrer" onClick={async (e) => {
-                      if (f.url) return;
-                      e.preventDefault();
-                      const { data } = await supabase.storage.from("studio").createSignedUrl(f.path, 600, { download: true });
-                      if (data) window.open(data.signedUrl, "_blank");
-                    }} className="rounded-md border bg-card p-1 hover:border-foreground">
-                      {f.url && /\.(png|jpe?g|webp|gif|bmp)$/i.test(f.path) ? <img src={f.url} alt="" className="aspect-square w-full rounded object-cover" /> : <div className="bg-grid flex aspect-square items-center justify-center rounded bg-muted font-mono text-xs uppercase">{f.path.split(".").pop()}</div>}
-                      <div className="flex items-center justify-between gap-1 px-1 pt-1">
-                        <p className="truncate text-[11px]">{f.label}</p>
-                        <button
-                          aria-label="Download file"
-                          title="Download · הורדה"
-                          className="shrink-0 text-muted-foreground hover:text-foreground"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            const { data, error } = await supabase.storage.from("studio").createSignedUrl(f.path, 60, { download: f.label.split("/").pop() || true });
-                            if (error || !data) return toast.error("Couldn't create a download link");
-                            window.open(data.signedUrl, "_blank");
-                          }}
-                        >
-                          ⬇
-                        </button>
-                        <button
-                          aria-label="Delete file"
-                          title="Delete · מחיקה"
-                          className="shrink-0 text-muted-foreground hover:text-destructive"
-                          onClick={async (e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            await supabase.storage.from("studio").remove([f.path]);
-                            await supabase.from("project_files").delete().eq("id", f.id);
-                            qc.invalidateQueries({ queryKey: ["files", id] });
-                            toast.success("File deleted");
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                      <p className="px-1 font-mono text-[10px] text-muted-foreground">{new Date(f.created_at).toLocaleDateString()}</p>
-                    </a>
-                  ))}
-                  {list.length === 0 && <p className="text-xs text-muted-foreground">—</p>}
-                </div>
-              </section>
-            ))}
+            <FileManager projectId={id} files={files.data ?? []} onChanged={() => qc.invalidateQueries({ queryKey: ["files", id] })} />
           </div>
         </TabsContent>
 
