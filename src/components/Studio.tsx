@@ -621,8 +621,8 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 )}
               </div>
               <div className="text-sm">
-                <p className="font-medium">{product ? "Replace product photo" : "Upload a product photo"}</p>
-                <p className="text-muted-foreground">JPG or PNG of the real product or its current pack.</p>
+                <p className="font-medium">{product ? t("st.replace") : t("st.upload")}</p>
+                <p className="text-muted-foreground">{t("st.uploadhint")}</p>
               </div>
               <input
                 type="file"
@@ -648,13 +648,13 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </div>
             {product && (
               <div className="mt-5">
-                <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Choose a task</p>
+                <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">{t("st.task")}</p>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {(
                     [
-                      ["concept", "Create a concept", "Get several creative directions, style guides and visuals to choose from."],
-                      ["ready", "Design from approved concept", "Already have a concept? Paste it and go straight to the design."],
-                      ["guide", "Concept from a style guide", "Design in the language of a saved brand / licensed character guide (Hello Kitty, Disney…)."],
+                      ["concept", t("st.task.concept"), t("st.task.concept.d")],
+                      ["ready", t("st.task.ready"), t("st.task.ready.d")],
+                      ["guide", t("st.task.guide"), t("st.task.guide.d")],
                     ] as const
                   ).map(([k, t, d]) => (
                     <button
@@ -839,7 +839,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 />
                 <VoiceButton className="self-end" disabled={thinking} onText={(t) => setDraft((d) => (d ? `${d} ${t}` : t))} />
                 <Button onClick={() => send()} disabled={thinking} className="h-auto self-stretch">
-                  {thinking ? "…" : "Send"}
+                  {thinking ? "…" : t("st.send")}
                 </Button>
               </div>
             </div>
@@ -855,7 +855,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
 
         <SortableSteps group="right" className="flex flex-col gap-6">
           <Step key="mockup" n="04" title={t("step.04")}>
-            <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">Packaging type</p>
+            <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">{t("st.packtype")}</p>
             <div className="mb-4 flex flex-wrap gap-2">
               {PACK_TYPES.map(([k, label]) => (
                 <button
@@ -886,7 +886,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                       onClick={() => renderMockup(view)}
                       disabled={mockBusy !== null || !concept || !productFile}
                     >
-                      {mockBusy === view ? "…" : mockups[view] ? "Re-render" : "Render"}
+                      {mockBusy === view ? "…" : mockups[view] ? t("st.rerender") : t("st.render")}
                     </StepButton>
                     {mockups[view] && mockFinal[view] && (
                       <Button size="sm" variant="outline" onClick={() => download(mockups[view]!, `mockup-${view}.png`)}>
@@ -906,7 +906,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                   <img src={dieline} alt="Dieline" className="h-full w-full object-contain" />
                 ) : (
                   <p className="px-4 text-center font-mono text-xs text-muted-foreground">
-                    + Add a dieline / layout
+                    {t("st.adddieline")}
                     <br />
                     PDF · AI · PNG · JPG
                   </p>
@@ -926,12 +926,12 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             )}
             <div className="mt-4 flex flex-wrap gap-2">
               <StepButton n="05" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
-                {artBusy ? "Placing artwork…" : art ? "Regenerate artwork" : "Place artwork on dieline"}
+                {artBusy ? "Placing artwork…" : art ? t("st.regen") : t("st.place")}
               </StepButton>
               {art && artFinal && (
                 <>
                   <Button onClick={exportSvg} disabled={svgBusy}>
-                    Export layered SVG for Illustrator
+                    {t("st.export")}
                   </Button>
                   <Button variant="outline" onClick={() => download(art, "artwork.png")}>
                     PNG
@@ -977,7 +977,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </p>
             <div className="mt-5 border-t pt-4">
               <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">
-                Shipping carton dieline · פריסת קרטון הובלה
+                {t("st.master")}
               </p>
               <label className="block cursor-pointer">
                 <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
@@ -985,7 +985,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                     <img src={masterDieline} alt="Master carton dieline" className="h-full w-full object-contain" />
                   ) : (
                     <p className="px-4 text-center font-mono text-xs text-muted-foreground">
-                      + Add a master carton dieline / layout
+                      {t("st.addmaster")}
                       <br />
                       PDF · AI · PNG · JPG
                     </p>
