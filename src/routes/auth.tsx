@@ -83,7 +83,7 @@ function AuthPage() {
     <div className="grid min-h-screen lg:grid-cols-2">
       {/* Brand panel — print-shop inspired */}
       <div className="relative hidden overflow-hidden bg-ink text-paper lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="bg-grid absolute inset-0 opacity-[0.35]" style={{ ["--grid" as string]: undefined }} />
+        <div className="bg-grid absolute inset-0 opacity-[0.35]" />
         <div className="pointer-events-none absolute -right-24 top-1/2 aspect-square w-[34rem] -translate-y-1/2 rotate-12 rounded-[3rem] border-2 border-dashed border-cut opacity-60" />
         <div className="pointer-events-none absolute -right-10 top-1/2 aspect-square w-[26rem] -translate-y-1/2 rotate-12 rounded-[2rem] border border-paper/20" />
         <div className="relative flex items-center gap-3">
