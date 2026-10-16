@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PROJECT_TYPES, projectTypeLabel, signedUrls, stageLabel, STAGES } from "@/lib/storage";
+import { IdeasStrip } from "@/components/IdeasStrip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -57,6 +58,7 @@ function Dashboard() {
         </div>
         <div className="flex gap-2">
           <Input placeholder="Search project, customer, supplier…" value={q} onChange={(e) => setQ(e.target.value)} className="w-72 bg-card" />
+          <Button variant="outline" onClick={() => navigate({ to: "/ideas" })}>Free ideas · רעיונות חופשיים</Button>
           <Button variant="cut" onClick={() => setOpen(true)}>+ New project</Button>
         </div>
       </div>
@@ -106,6 +108,8 @@ function Dashboard() {
         ))}
         {data && list.length === 0 && <p className="text-sm text-muted-foreground">No projects yet — create the first one.</p>}
       </div>
+
+      <IdeasStrip />
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="bg-background">

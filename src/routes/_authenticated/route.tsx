@@ -1,6 +1,6 @@
 import { createFileRoute, Link, Outlet, redirect, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { FolderKanban, LogOut, SwatchBook, Users } from "lucide-react";
+import { FolderKanban, Lightbulb, LogOut, SwatchBook, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Projects", icon: FolderKanban },
+  { to: "/ideas", label: "Ideas", icon: Lightbulb },
   { to: "/styles", label: "Style guides", icon: SwatchBook },
   { to: "/customers", label: "Customers", icon: Users },
 ] as const;

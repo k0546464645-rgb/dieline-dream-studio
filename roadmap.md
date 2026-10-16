@@ -43,3 +43,5 @@
 - [x] Rename project: exists in Details tab; added quick-rename pencil on dashboard cards
 - [~] UI redesign round 2: login page redesigned (split screen, dark brand panel "Design. Approve. Print.", verified live) + dark ink sidebar with cut accent (verified live); inner pages (dashboard cards, project page, studio) still to refresh
 - [x] Cloud drive integration: import from Google Drive + OneDrive into a project (browse folders, multi-select, Google Docs auto-export to PDF — verified live)
+- [~] Free ideas chat screen before product upload (designs/ideas not tied to a product); designer can save the outcome as a project or as ideas
+- [~] Autopilot: learns products/categories the designer works on, ongoing research, fresh concepts shown dynamically at the bottom of the home screen

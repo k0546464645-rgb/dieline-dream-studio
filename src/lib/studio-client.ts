@@ -5,6 +5,7 @@ export type ChatMsg = { role: "user" | "assistant"; text: string };
 export type ConceptContext = {
   styleGuide?: { text: string; images: string[] } | undefined;
   learnings?: string | undefined;
+  autopilot?: boolean | undefined;
 };
 
 export function streamConcept(
