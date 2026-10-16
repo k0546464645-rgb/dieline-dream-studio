@@ -56,7 +56,7 @@ export const listDriveItems = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => input.parse(data))
   .handler(async ({ data, context }): Promise<{ items: DriveItem[] }> => {
-    await assertStudio(context.supabase, context.userId);
+    await assertStudio(context);
     const { base, key } = gateway(data.provider);
     if (data.provider === "google") {
       const folder = data.folderId ?? "root";
@@ -95,7 +95,7 @@ export const downloadDriveItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ provider: z.enum(["google", "onedrive"]), fileId: z.string(), name: z.string() }).parse(data))
   .handler(async ({ data, context }): Promise<{ name: string; mimeType: string; base64: string }> => {
-    await assertStudio(context.supabase, context.userId);
+    await assertStudio(context);
     const { base, key } = gateway(data.provider);
     const path =
       data.provider === "google"
