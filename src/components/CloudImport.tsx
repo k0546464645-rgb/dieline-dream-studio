@@ -64,7 +64,7 @@ export function CloudImport({ projectId, onDone }: { projectId: string; onDone: 
     if (!provider || path.length <= 1) return;
     const next = path.slice(0, -1);
     setPath(next);
-    void load(provider, next[next.length - 1].id);
+    void load(provider, next[next.length - 1]?.id);
   }
 
   function toggle(item: DriveItem) {

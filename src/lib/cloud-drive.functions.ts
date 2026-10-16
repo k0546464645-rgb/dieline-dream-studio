@@ -9,7 +9,7 @@ export type DriveItem = {
   mimeType: string;
   size: number;
   isFolder: boolean;
-  modifiedTime?: string;
+  modifiedTime?: string | undefined;
 };
 
 const input = z.object({
