@@ -58,7 +58,9 @@ export function VoiceButton({ onText, disabled, className }: Props) {
         session.current = null;
         const form = new FormData();
         form.append("file", file, file.name);
-        const res = await fetch("/api/transcribe", { method: "POST", body: form });
+        const { data } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
+        const headers: Record<string, string> = data.session ? { Authorization: `Bearer ${data.session.access_token}` } : {};
+        const res = await fetch("/api/transcribe", { method: "POST", headers, body: form });
         onText(await readTranscript(res));
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Transcription failed");
