@@ -239,6 +239,7 @@ function ProjectPage() {
         <TabsContent value="files">
           <div className="space-y-6">
             <ArchiveImport projectId={id} onDone={() => qc.invalidateQueries({ queryKey: ["files", id] })} />
+            <CloudImport projectId={id} onDone={() => qc.invalidateQueries({ queryKey: ["files", id] })} />
             {grouped.map(([label, list]) => (
               <section key={label}>
                 <h3 className="mb-2 font-semibold">{label} <span className="font-mono text-xs text-muted-foreground">({list.length})</span></h3>
