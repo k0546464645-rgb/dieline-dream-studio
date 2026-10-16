@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { Mic, Square } from "lucide-react";
 import { toast } from "sonner";
-import { createParser, type ParseEvent } from "eventsource-parser";
+import { createParser, type EventSourceMessage } from "eventsource-parser";
 import { recordWav } from "@/lib/record-wav";
 import { Button } from "@/components/ui/button";
 
@@ -20,8 +20,7 @@ async function readTranscript(res: Response): Promise<string> {
   let full = "";
   let final = "";
   const parser = createParser({
-    onEvent(event: ParseEvent) {
-      if (event.type !== "event") return;
+    onEvent(event: EventSourceMessage) {
       try {
         const data = JSON.parse(event.data) as { type?: string; delta?: string; text?: string };
         if (data.type === "transcript.text.delta" && data.delta) full += data.delta;
