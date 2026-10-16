@@ -94,14 +94,20 @@ export const listDriveItems = createServerFn({ method: "POST" })
 
 export const downloadDriveItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) => z.object({ provider: z.enum(["google", "onedrive"]), fileId: z.string(), name: z.string() }).parse(data))
+  .inputValidator((data) =>
+    z.object({ provider: z.enum(["google", "onedrive"]), fileId: z.string(), name: z.string(), mimeType: z.string().optional() }).parse(data),
+  )
   .handler(async ({ data, context }): Promise<{ name: string; mimeType: string; base64: string }> => {
     await assertStudio(context);
     const { base, key } = gateway(data.provider);
-    const path =
-      data.provider === "google"
+    // Native Google Docs/Sheets/Slides have no binary content — export them as PDF.
+    const googleNative = data.provider === "google" && (data.mimeType ?? "").startsWith("application/vnd.google-apps.");
+    const path = googleNative
+      ? `/files/${encodeURIComponent(data.fileId)}/export?mimeType=${encodeURIComponent("application/pdf")}`
+      : data.provider === "google"
         ? `/files/${encodeURIComponent(data.fileId)}?alt=media`
         : `/me/drive/items/${encodeURIComponent(data.fileId)}/content`;
+    const name = googleNative && !data.name.toLowerCase().endsWith(".pdf") ? `${data.name}.pdf` : data.name;
     const res = await callGateway(base, key, path);
     const buf = await res.arrayBuffer();
     if (buf.byteLength > 45 * 1024 * 1024) throw new Error("File is over 45 MB");
