@@ -45,3 +45,5 @@
 - [x] Cloud drive integration: import from Google Drive + OneDrive into a project (browse folders, multi-select, Google Docs auto-export to PDF — verified live)
 - [~] Free ideas chat screen before product upload (designs/ideas not tied to a product); designer can save the outcome as a project or as ideas
 - [~] Autopilot: learns products/categories the designer works on, ongoing research, fresh concepts shown dynamically at the bottom of the home screen
+- [x] Free ideas chat screen (/ideas): concept generation without a product, save outcome as project or as ideas (verified live)
+- [~] Autopilot: dashboard "Fresh ideas" strip learns from recent projects + existing ideas, auto-refreshes when stale (verified live); continuous background research (scheduled) still pending
