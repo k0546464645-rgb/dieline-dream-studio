@@ -14,23 +14,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileManager } from "@/components/FileManager";
+import { usePrefs, type DictKey } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Dieline Studio" }, { name: "description", content: "Packaging project workspace." }] }),
   component: ProjectPage,
 });
 
-const KIND_LABEL: Record<string, string> = {
-  product: "Product photos",
-  concept: "Concept visuals",
-  mockup: "3D designs",
-  dieline: "Dielines",
-  artwork: "Artwork",
-  final: "Final files (Illustrator)",
-  docs: "Documents",
-};
-
 function ProjectPage() {
+  const { t } = usePrefs();
   const { id } = Route.useParams();
   const qc = useQueryClient();
   const [sendOpen, setSendOpen] = useState(false);
