@@ -34,12 +34,16 @@ export function IdeasStrip() {
         .select("name,project_type,approved_concept")
         .order("updated_at", { ascending: false })
         .limit(8);
+      const { data: existing } = await supabase.from("ideas").select("title,summary").order("created_at", { ascending: false }).limit(20);
       const context = (projects ?? [])
         .map((p) => `- ${p.name} (${p.project_type})${p.approved_concept ? ` — approved direction: ${p.approved_concept.slice(0, 120)}` : ""}`)
         .join("\n");
+      const known = (existing ?? []).map((i) => `- ${i.title}: ${i.summary}`).join("\n");
       const prompt = `AUTOPILOT RESEARCH TASK. You are the studio's research autopilot.
 The studio recently worked on these products and categories:
 ${context || "(no projects yet — pick trending consumer packaged goods categories)"}
+Ideas the studio already has — learn from them, build beyond them, NEVER repeat or rephrase them:
+${known || "(none yet)"}
 Research current packaging trends in exactly these domains and propose 3 FRESH concept ideas the studio has not done yet.
 Start EACH with a line exactly in the form "## Concept N: <Name>". For each: one-line big idea, then palette, typography, finish and why it fits the trend. Be concise and specific. Do not repeat the approved directions above — build beyond them.`;
       const msgs: ChatMsg[] = [{ role: "user", text: prompt }];
