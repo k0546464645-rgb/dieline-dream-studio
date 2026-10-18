@@ -15,6 +15,7 @@ import {
   Rocket,
   Search,
   Sparkles,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -142,19 +143,33 @@ function Dashboard() {
                   )}
                 </div>
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <h3 className="font-semibold">{p.name}</h3>
-                  <button
-                    aria-label="Rename project"
-                    title="Rename · שינוי שם"
-                    className="text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setRenaming({ id: p.id, name: p.name });
-                    }}
-                  >
-                    <Pencil className="size-4" />
-                  </button>
+                  <h3 className="truncate font-semibold">{p.name}</h3>
+                  <div className="flex items-center gap-1">
+                    <button
+                      aria-label="Rename project"
+                      title="Rename · שינוי שם"
+                      className="text-muted-foreground opacity-0 transition-opacity hover:text-accent group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setRenaming({ id: p.id, name: p.name });
+                      }}
+                    >
+                      <Pencil className="size-4" />
+                    </button>
+                    <button
+                      aria-label={t("dash.delete")}
+                      title={t("dash.delete")}
+                      className="text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (window.confirm(t("dash.confirmdelete"))) void deleteProject(p.id);
+                      }}
+                    >
+                      <Trash2 className="size-4" />
+                    </button>
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">{[p.customer_name, p.supplier].filter(Boolean).join(" · ") || "—"}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5 font-mono text-[11px]">
@@ -250,5 +265,28 @@ function Dashboard() {
     if (error) return toast.error(error.message);
     setRenaming(null);
     qc.invalidateQueries({ queryKey: ["projects"] });
+  }
+
+  async function deleteProject(id: string) {
+    // gather storage files (product image + item images) to clean up
+    const [{ data: files }, { data: items }] = await Promise.all([
+      supabase.from("project_files").select("path").eq("project_id", id),
+      supabase.from("project_items").select("product_path").eq("project_id", id),
+    ]);
+    const paths = [
+      ...(files ?? []).map((f) => f.path),
+      ...((items ?? []).map((i) => i.product_path).filter(Boolean) as string[]),
+    ];
+    if (paths.length) await supabase.storage.from("studio").remove(paths);
+    await Promise.all([
+      supabase.from("project_items").delete().eq("project_id", id),
+      supabase.from("project_files").delete().eq("project_id", id),
+      supabase.from("approvals").delete().eq("project_id", id),
+      supabase.from("activity").delete().eq("project_id", id),
+    ]);
+    const { error } = await supabase.from("projects").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["projects"] });
+    toast.success(t("dash.delete") + " ✓");
   }
 }

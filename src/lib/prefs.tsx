@@ -51,6 +51,9 @@ const DICT = {
     "dash.awaiting": "awaiting reply",
     "dash.changes": "changes requested",
     "dash.rename": "Rename project",
+    "dash.delete": "Delete project",
+    "dash.confirmdelete": "Delete this project and all its files? This cannot be undone.",
+
     "dash.savename": "Save name",
     "dash.create": "Create project",
     "dash.type": "Project type",
@@ -199,6 +202,9 @@ const DICT = {
     "dash.awaiting": "ממתין לתשובה",
     "dash.changes": "התבקשו שינויים",
     "dash.rename": "שינוי שם פרויקט",
+    "dash.delete": "מחיקת פרויקט",
+    "dash.confirmdelete": "למחוק את הפרויקט וכל הקבצים שלו? הפעולה אינה הפיכה.",
+
     "dash.savename": "שמירת שם",
     "dash.create": "יצירת פרויקט",
     "dash.type": "סוג הפרויקט",
