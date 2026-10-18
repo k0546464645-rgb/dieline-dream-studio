@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] 3D mockups: permanent front/back views, multiple optional packaging selections and automatic extra image windows
 - [x] Restore neon-purple and white default; keep designer-selectable interface colors (verified color change and persistence)
 - [x] Ideas: automatic style guide + mockups without product photos; carry generated products or redesign uploaded photos into projects (verified both paths and reload)
 - [x] Remove background: upload image, preserve product, download transparent PNG (verified actual RGBA download)
