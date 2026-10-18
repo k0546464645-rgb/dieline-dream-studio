@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { usePrefs } from "@/lib/prefs";
+import { EditableTitle } from "@/components/EditableTitle";
 
 export const Route = createFileRoute("/_authenticated/styles")({
   head: () => ({ meta: [{ title: "Style guides — Dieline Studio" }, { name: "description", content: "Brand and licensed style guide library." }, { property: "og:title", content: "Style guides — Dieline Studio" }, { property: "og:description", content: "Brand and licensed style guide library." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -88,9 +89,9 @@ function Styles() {
     <main className="mx-auto max-w-[1500px] px-6 py-8">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-widest text-accent">library</p>
-          <h1 className="text-4xl font-extrabold tracking-tight">{t("sty.title")}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t("sty.sub")}</p>
+          <EditableTitle k="sty.kicker" as="p" className="font-mono text-xs uppercase tracking-widest text-accent" />
+          <EditableTitle k="sty.title" as="h1" className="text-4xl font-extrabold tracking-tight" />
+          <EditableTitle k="sty.sub" as="p" className="mt-1 text-sm text-muted-foreground" />
         </div>
         <Button variant="cut" onClick={() => setEdit({ ...blank })}>{t("sty.new")}</Button>
       </div>

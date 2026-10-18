@@ -23,6 +23,7 @@ export type Prefs = { lang: Lang; theme: ThemeId; accent: AccentId; font: FontId
 const DEFAULTS: Prefs = { lang: "he", theme: "paper", accent: "violet", font: "bricolage" };
 const KEY = "ds-prefs";
 const PALETTE_REVISION = "neon-white-2026-10";
+const TITLES_KEY = "ds-titles";
 
 const DICT = {
   en: {
@@ -160,6 +161,17 @@ const DICT = {
     "ideas.drop": "Drop images here",
     "ideas.placeholder": "A brand, category, trend or vibe… drag or paste images too",
     "ideas.opening": "Hey! I'm your free-ideas studio — no product needed. Tell me about a brand, a category, a trend or a vibe, and I'll sketch packaging concepts for you. You can also drag mood-board or competitor photos straight into this chat.\n\nWhen you like something, start a **project** from the chat or file it under **ideas**.",
+    "ideas.sub2": "Concepts · style guides · product mockups",
+    "sty.kicker": "library",
+    "st.packconfigs": "Packaging configurations",
+    "info.product": "Product info",
+    "info.product.sub": "Packaging language, barcode, item number",
+    "info.front": "Front panel",
+    "info.front.sub": "Product name, tagline, scent — what the shopper sees first",
+    "info.back": "Back panel",
+    "info.back.sub": "Marketing, instructions, ingredients, warnings, legal details",
+    "set.titles": "Custom titles",
+    "set.titles.reset": "Restore default titles",
     "auth.welcome": "Welcome back",
     "auth.create": "Create your account",
     "auth.subin": "Sign in to continue to your projects.",
@@ -311,6 +323,17 @@ const DICT = {
     "ideas.drop": "שחררו תמונות כאן",
     "ideas.placeholder": "מותג, קטגוריה, טרנד או וייב… אפשר גם לגרור תמונות",
     "ideas.opening": "היי! כאן מייצרים רעיונות חופשיים בלי מוצר. ספרו לי על מותג, קטגוריה או טרנד — ואציע קונספטים. אפשר גם לגרור תמונות לתוך הצ׳אט. בסוף מתחילים פרויקט ישירות מהצ׳אט או שומרים כרעיונות.",
+    "ideas.sub2": "קונספטים · סטייל גייד · הדמיות מוצרים",
+    "sty.kicker": "ספרייה",
+    "st.packconfigs": "תצורות אריזה",
+    "info.product": "פרטי מוצר",
+    "info.product.sub": "שפת האריזה, ברקוד ומק״ט",
+    "info.front": "צד קידמי",
+    "info.front.sub": "שם המוצר, תיאור וניחוח — מה שהלקוח רואה ראשון",
+    "info.back": "צד אחורי",
+    "info.back.sub": "שיווק, הוראות שימוש, רכיבים, אזהרות ופרטים משפטיים",
+    "set.titles": "כותרות מותאמות אישית",
+    "set.titles.reset": "שחזור כותרות ברירת מחדל",
     "auth.welcome": "ברוכים השבים",
     "auth.create": "יצירת חשבון",
     "auth.subin": "התחברו כדי להמשיך לפרויקטים שלכם.",
@@ -335,6 +358,9 @@ type PrefsCtx = Prefs & {
   set: (patch: Partial<Prefs>) => void;
   t: (k: DictKey) => string;
   dir: "ltr" | "rtl";
+  titles: Record<string, string>;
+  setTitle: (k: string, v: string) => void;
+  resetTitles: () => void;
 };
 
 const Ctx = createContext<PrefsCtx>({
@@ -342,6 +368,9 @@ const Ctx = createContext<PrefsCtx>({
   set: () => {},
   t: (k) => DICT.en[k] ?? k,
   dir: "ltr",
+  titles: {},
+  setTitle: () => {},
+  resetTitles: () => {},
 });
 
 function applyToDocument(p: Prefs) {
@@ -359,6 +388,7 @@ function applyToDocument(p: Prefs) {
 
 export function PrefsProvider({ children }: { children: ReactNode }) {
   const [prefs, setPrefs] = useState<Prefs>(DEFAULTS);
+  const [titles, setTitles] = useState<Record<string, string>>({});
 
   // Load saved prefs after hydration (SSR can't see localStorage)
   useEffect(() => {
@@ -371,10 +401,20 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
         localStorage.setItem("ds-palette-revision", PALETTE_REVISION);
       }
       setPrefs({ ...DEFAULTS, ...saved });
+      const tRaw = localStorage.getItem(TITLES_KEY);
+      if (tRaw) setTitles(JSON.parse(tRaw) as Record<string, string>);
     } catch {
       /* ignore */
     }
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(TITLES_KEY, JSON.stringify(titles));
+    } catch {
+      /* ignore */
+    }
+  }, [titles]);
 
   useEffect(() => {
     applyToDocument(prefs);
@@ -388,8 +428,18 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   const value: PrefsCtx = {
     ...prefs,
     set: (patch) => setPrefs((p) => ({ ...p, ...patch })),
-    t: (k) => DICT[prefs.lang][k] ?? DICT.en[k] ?? k,
+    t: (k) => titles[k] || DICT[prefs.lang][k] || DICT.en[k] || k,
     dir: prefs.lang === "he" ? "rtl" : "ltr",
+    titles,
+    setTitle: (key, v) =>
+      setTitles((prev) => {
+        const next = { ...prev };
+        const val = v.trim();
+        if (val) next[key] = val;
+        else delete next[key];
+        return next;
+      }),
+    resetTitles: () => setTitles({}),
   };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
