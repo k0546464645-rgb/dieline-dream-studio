@@ -27,7 +27,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Projects — Dieline Studio" }, { name: "description", content: "All packaging projects." }] }),
+  head: () => ({ meta: [{ title: "Projects — Dieline Studio" }, { name: "description", content: "All packaging projects." }, { property: "og:title", content: "Projects — Dieline Studio" }, { property: "og:description", content: "All packaging projects." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Dashboard,
 });
 

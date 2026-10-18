@@ -20,8 +20,9 @@ export const FONTS = [
 export type FontId = (typeof FONTS)[number]["id"];
 
 export type Prefs = { lang: Lang; theme: ThemeId; accent: AccentId; font: FontId };
-const DEFAULTS: Prefs = { lang: "he", theme: "neon", accent: "violet", font: "bricolage" };
+const DEFAULTS: Prefs = { lang: "he", theme: "paper", accent: "violet", font: "bricolage" };
 const KEY = "ds-prefs";
+const PALETTE_REVISION = "neon-white-2026-10";
 
 const DICT = {
   en: {
@@ -357,7 +358,13 @@ export function PrefsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) setPrefs({ ...DEFAULTS, ...(JSON.parse(raw) as Partial<Prefs>) });
+      const saved = raw ? JSON.parse(raw) as Partial<Prefs> : {};
+      if (localStorage.getItem("ds-palette-revision") !== PALETTE_REVISION) {
+        saved.theme = "paper";
+        saved.accent = "violet";
+        localStorage.setItem("ds-palette-revision", PALETTE_REVISION);
+      }
+      setPrefs({ ...DEFAULTS, ...saved });
     } catch {
       /* ignore */
     }

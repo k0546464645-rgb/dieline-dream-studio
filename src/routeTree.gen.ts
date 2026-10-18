@@ -19,6 +19,7 @@ import { Route as AuthenticatedStylesRouteImport } from './routes/_authenticated
 import { Route as ApiConceptRouteImport } from './routes/api/concept'
 import { Route as ApiEditImageRouteImport } from './routes/api/edit-image'
 import { Route as ApiExtractRouteImport } from './routes/api/extract'
+import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
 import { Route as ApiQcRouteImport } from './routes/api/qc'
 import { Route as ApiTranscribeRouteImport } from './routes/api/transcribe'
 import { Route as ApproveTokenRouteImport } from './routes/approve.$token'
@@ -73,6 +74,11 @@ const ApiExtractRoute = ApiExtractRouteImport.update({
   path: '/api/extract',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiGenerateImageRoute = ApiGenerateImageRouteImport.update({
+  id: '/api/generate-image',
+  path: '/api/generate-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiQcRoute = ApiQcRouteImport.update({
   id: '/api/qc',
   path: '/api/qc',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/qc': typeof ApiQcRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/qc': typeof ApiQcRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/api/concept': typeof ApiConceptRoute
   '/api/edit-image': typeof ApiEditImageRoute
   '/api/extract': typeof ApiExtractRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
   '/api/qc': typeof ApiQcRoute
   '/api/transcribe': typeof ApiTranscribeRoute
   '/approve/$token': typeof ApproveTokenRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/api/concept'
     | '/api/edit-image'
     | '/api/extract'
+    | '/api/generate-image'
     | '/api/qc'
     | '/api/transcribe'
     | '/approve/$token'
@@ -168,6 +178,7 @@ export interface FileRouteTypes {
     | '/api/concept'
     | '/api/edit-image'
     | '/api/extract'
+    | '/api/generate-image'
     | '/api/qc'
     | '/api/transcribe'
     | '/approve/$token'
@@ -184,6 +195,7 @@ export interface FileRouteTypes {
     | '/api/concept'
     | '/api/edit-image'
     | '/api/extract'
+    | '/api/generate-image'
     | '/api/qc'
     | '/api/transcribe'
     | '/approve/$token'
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   ApiConceptRoute: typeof ApiConceptRoute
   ApiEditImageRoute: typeof ApiEditImageRoute
   ApiExtractRoute: typeof ApiExtractRoute
+  ApiGenerateImageRoute: typeof ApiGenerateImageRoute
   ApiQcRoute: typeof ApiQcRoute
   ApiTranscribeRoute: typeof ApiTranscribeRoute
   ApproveTokenRoute: typeof ApproveTokenRoute
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExtractRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/generate-image': {
+      id: '/api/generate-image'
+      path: '/api/generate-image'
+      fullPath: '/api/generate-image'
+      preLoaderRoute: typeof ApiGenerateImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/qc': {
       id: '/api/qc'
       path: '/api/qc'
@@ -331,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiConceptRoute: ApiConceptRoute,
   ApiEditImageRoute: ApiEditImageRoute,
   ApiExtractRoute: ApiExtractRoute,
+  ApiGenerateImageRoute: ApiGenerateImageRoute,
   ApiQcRoute: ApiQcRoute,
   ApiTranscribeRoute: ApiTranscribeRoute,
   ApproveTokenRoute: ApproveTokenRoute,

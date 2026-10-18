@@ -15,10 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileManager } from "@/components/FileManager";
+import { BackgroundRemoval } from "@/components/BackgroundRemoval";
 import { usePrefs, type DictKey } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
-  head: () => ({ meta: [{ title: "Project — Dieline Studio" }, { name: "description", content: "Packaging project workspace." }] }),
+  head: () => ({ meta: [{ title: "Project — Dieline Studio" }, { name: "description", content: "Packaging project workspace." }, { property: "og:title", content: "Project — Dieline Studio" }, { property: "og:description", content: "Packaging project workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: ProjectPage,
 });
 
@@ -144,6 +145,7 @@ function ProjectPage() {
           <p className="text-sm text-muted-foreground">{[projectTypeLabel(p.project_type), p.customer_name, p.supplier && `Supplier: ${p.supplier}`, p.supplier_item].filter(Boolean).join(" · ")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <BackgroundRemoval />
           <select
             value={p.style_guide_id ?? ""}
             onChange={(e) => update({ style_guide_id: e.target.value || null })}

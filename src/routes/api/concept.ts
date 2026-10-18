@@ -23,14 +23,18 @@ export const Route = createFileRoute("/api/concept")({
         if (denied) return denied;
         const apiKey = process.env["LOVABLE_API_KEY"];
         if (!apiKey) return new Response("Missing LOVABLE_API_KEY", { status: 500 });
-        const { messages, productImage, styleGuide, learnings, autopilot } = (await request.json()) as {
+        const { messages, productImage, styleGuide, learnings, autopilot, ideaVisuals, language } = (await request.json()) as {
           messages: Msg[];
           productImage?: string;
           styleGuide?: { text: string; images: string[] };
           learnings?: string;
           autopilot?: boolean;
+          ideaVisuals?: boolean;
+          language?: "he" | "en";
         };
         let instructions = SYSTEM;
+        if (language) instructions += `\nReply entirely in ${language === "he" ? "Hebrew" : "English"}, except the required ## Concept N: headings used by the application.`;
+        if (ideaVisuals) instructions += `\nIDEAS VISUAL STUDIO: For a product design request, create distinct actionable product concepts even without a photograph. Invent appropriate product shapes from the written brief; do not demand a photo. Include a complete style guide for EACH concept: palette, fonts, logo direction, imagery, materials, finishes and product/variant lineup. Use the exact ## Concept N: <Name> heading format for each. The app will generate product mockup images separately after your reply; do not claim an image already exists. For ordinary questions or when the product category is genuinely unknown, reply normally without concept headings. For changes to a chosen design, restate its full updated concept and style guide under ## FINAL CONCEPT: <Name>.`;
         if (styleGuide?.text) {
           instructions += `\n\nA BRAND / LICENSED STYLE GUIDE IS SELECTED for this project. Every concept must follow it strictly (characters, colors, fonts, imagery, usage rules).
 If the guide offers several sub-styles, character sets, eras or ranges and the user has not chosen one, FIRST ask which one they want (list the options briefly), and still propose 2-3 directions based on the guide.

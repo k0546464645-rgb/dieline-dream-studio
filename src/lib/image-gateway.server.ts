@@ -11,6 +11,14 @@ export const imageSettings: Omit<ImageConfig, "apiKey"> = {
   format: "openai",
 };
 
+export function generateImage(config: ImageConfig, prompt: string, stream = true) {
+  return fetch(`${config.baseURL}/v1/images/generations`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${config.apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model: config.model, prompt, size: "1536x1024", quality: "medium", ...(stream ? { stream: true, partial_images: 1 } : {}) }),
+  });
+}
+
 export async function editImage(config: ImageConfig, form: FormData, signal?: AbortSignal) {
   const streaming = form.get("stream") !== "false";
   form.set("model", config.model);

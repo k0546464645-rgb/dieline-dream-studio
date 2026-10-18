@@ -1,6 +1,7 @@
 # Roadmap
-- [ ] Ideas: automatic style guide + mockups without product photos; carry generated products or uploaded photos into projects
-- [ ] Remove background: upload image, preserve product, download transparent PNG
+- [x] Restore neon-purple and white default; keep designer-selectable interface colors (verified color change and persistence)
+- [x] Ideas: automatic style guide + mockups without product photos; carry generated products or redesign uploaded photos into projects (verified both paths and reload)
+- [x] Remove background: upload image, preserve product, download transparent PNG (verified actual RGBA download)
 - [x] Customers page: scrollable customer list + quick add form (name, contact, email, phone, notes) with per-customer project count
 - [ ] Customer billing system: charge per hour or per design concept (user will spec later)
 - [ ] Design version history: keep mockups and dieline artworks per version so the designer can return to earlier versions

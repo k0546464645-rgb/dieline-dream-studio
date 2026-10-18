@@ -43,7 +43,7 @@
   /* Light studio: warm paper canvas, deep ink text, neon purple cut line */
   --paper: oklch(0.975 0.008 300);
   --ink: oklch(0.26 0.05 295);
-  --shell: oklch(0.38 0.055 297);
+  --shell: var(--cut);
   --cut: oklch(0.58 0.28 302);
   --cut-soft: oklch(0.93 0.05 305);
   --background: var(--paper);
@@ -52,7 +52,7 @@
   --card-foreground: var(--ink);
   --popover: oklch(1 0 0);
   --popover-foreground: var(--ink);
-  --primary: var(--ink);
+  --primary: var(--cut);
   --primary-foreground: oklch(0.98 0.005 95);
   --secondary: oklch(0.945 0.025 300);
   --secondary-foreground: var(--ink);
@@ -65,7 +65,7 @@
   --border: oklch(0.9 0.02 300);
   --input: oklch(0.88 0.03 300);
   --ring: var(--cut);
-  --gradient-accent: linear-gradient(135deg, oklch(0.7 0.3 310), var(--cut) 50%, oklch(0.55 0.3 330));
+  --gradient-accent: linear-gradient(135deg, color-mix(in oklab, var(--cut) 80%, var(--card)), var(--cut));
   --shadow-soft: 0 1px 2px color-mix(in oklab, var(--ink) 5%, transparent), 0 8px 24px -8px color-mix(in oklab, var(--ink) 12%, transparent);
   --shadow-lift: 0 2px 4px color-mix(in oklab, var(--ink) 6%, transparent), 0 14px 32px -10px color-mix(in oklab, var(--ink) 18%, transparent);
   --grid: linear-gradient(to right, color-mix(in oklab, var(--ink) 4%, transparent) 1px, transparent 1px),
