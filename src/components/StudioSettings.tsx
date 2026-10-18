@@ -97,6 +97,18 @@ export function StudioSettings() {
                 ))}
               </div>
             </div>
+            <div className="space-y-1.5">
+              <Label>{p.t("set.titles")}</Label>
+              {Object.keys(p.titles).length > 0 ? (
+                <Button variant="outline" onClick={p.resetTitles}>{p.t("set.titles.reset")}</Button>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {p.lang === "he"
+                    ? "עוד אין כותרות מותאמות — עברו על כותרת בכל מסך ולחצו על העיפרון כדי לשנות אותה."
+                    : "No custom titles yet — hover a title on any screen and click the pencil to rename it."}
+                </p>
+              )}
+            </div>
             <p className="text-xs text-muted-foreground">{p.t("set.note")}</p>
             <Button variant="cut" onClick={() => setOpen(false)}>✓</Button>
           </div>

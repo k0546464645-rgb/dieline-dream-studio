@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { VoiceButton } from "@/components/VoiceButton";
 import { Textarea } from "@/components/ui/textarea";
 import { usePrefs } from "@/lib/prefs";
+import { EditableTitle } from "@/components/EditableTitle";
 import { BackgroundRemoval } from "@/components/BackgroundRemoval";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -186,8 +187,8 @@ function IdeasChat() {
           <Lightbulb className="size-5" />
         </span>
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">{t("ideas.title")}</h1>
-          <p className="text-sm text-muted-foreground">{he ? "קונספטים · סטייל גייד · הדמיות מוצרים" : "Concepts · style guides · product mockups"}</p>
+          <EditableTitle k="ideas.title" as="h1" className="text-2xl font-extrabold tracking-tight" />
+          <EditableTitle k="ideas.sub2" as="p" className="text-sm text-muted-foreground" />
         </div>
         <div className="ms-auto shrink-0"><BackgroundRemoval /></div>
       </div>

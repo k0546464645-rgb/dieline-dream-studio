@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { usePrefs } from "@/lib/prefs";
+import { EditableTitle } from "@/components/EditableTitle";
 
 export const Route = createFileRoute("/_authenticated/customers")({
   head: () => ({ meta: [{ title: "Customers — Dieline Studio" }, { name: "description", content: "Customer list and quick onboarding." }, { property: "og:title", content: "Customers — Dieline Studio" }, { property: "og:description", content: "Customer list and quick onboarding." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -57,8 +58,8 @@ function Customers() {
     <main className="mx-auto max-w-[1500px] px-6 py-8">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-widest text-accent">{t("cust.kicker")}</p>
-          <h1 className="text-4xl font-extrabold tracking-tight">{t("cust.title")}</h1>
+          <EditableTitle k="cust.kicker" as="p" className="font-mono text-xs uppercase tracking-widest text-accent" />
+          <EditableTitle k="cust.title" as="h1" className="text-4xl font-extrabold tracking-tight" />
         </div>
         <div className="flex gap-2">
           <Input placeholder={t("cust.search")} value={q} onChange={(e) => setQ(e.target.value)} className="w-64 bg-card" />

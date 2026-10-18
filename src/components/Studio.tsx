@@ -25,8 +25,9 @@ import { VoiceButton } from "@/components/VoiceButton";
 import { AttachmentStrip, useChatAttachments, useImageDrop } from "@/components/ChatAttachments";
 import { imageFilesFrom } from "@/lib/chat-images";
 import { Check, Download, GripVertical, ImagePlus, Loader2, Minus, Plus, Sparkles } from "lucide-react";
-import { usePrefs } from "@/lib/prefs";
+import { usePrefs, type DictKey } from "@/lib/prefs";
 import { PACKAGING_OPTIONS, mockupSlots, mockupKind, savedMockupSlot, type MockupCounts } from "@/lib/mockup-layout";
+import { EditableTitle } from "@/components/EditableTitle";
 
 /** Drag-to-reorder wrapper for the step windows; order persists per column in localStorage. */
 function SortableSteps({ group, className, children }: { group: string; className?: string | undefined; children: React.ReactNode }) {
@@ -658,7 +659,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
       />
       <main className="grid gap-6 lg:grid-cols-[1.05fr_1fr]">
         <SortableSteps group="left" className="flex flex-col gap-6">
-          <Step key="product" n="01" title={t("step.01")}>
+          <Step key="product" n="01" titleKey="step.01">
             <label className="flex cursor-pointer items-center gap-4">
               <div className="bg-grid flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-md border bg-muted">
                 {product ? (
@@ -695,7 +696,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </div>
             {product && (
               <div className="mt-5">
-                <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">{t("st.task")}</p>
+                <EditableTitle k="st.task" as="p" className="mb-2 font-mono text-xs uppercase tracking-wider text-accent" />
                 <div className="grid gap-3 sm:grid-cols-2">
                   {(
                     [
@@ -792,7 +793,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             )}
           </Step>
 
-          <Step key="concept" n="02" title={t("step.02")}>
+          <Step key="concept" n="02" titleKey="step.02">
             <div
               ref={chatBox}
               className={`relative flex h-[460px] flex-col rounded-lg transition-shadow ${dropOver ? "ring-2 ring-accent" : ""}`}
@@ -892,7 +893,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </div>
           </Step>
 
-          <Step key="info" n="03" title={t("step.03")}>
+          <Step key="info" n="03" titleKey="step.03">
             <div className="mb-3">
               <ItemsImport onPick={(patch) => setInfo((cur) => ({ ...cur, ...patch }))} />
             </div>
@@ -901,9 +902,9 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
         </SortableSteps>
 
         <SortableSteps group="right" className="flex flex-col gap-6">
-          <Step key="mockup" n="04" title={t("step.04")}>
+          <Step key="mockup" n="04" titleKey="step.04">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <p className="font-mono text-xs text-accent">{he ? "תצורות אריזה" : "Packaging configurations"}</p>
+              <EditableTitle k="st.packconfigs" as="p" className="font-mono text-xs text-accent" />
               <span className="text-xs text-muted-foreground">{slots.length} {he ? "הדמיות" : "mockups"}</span>
             </div>
             <div className="mb-4 space-y-2">
@@ -943,7 +944,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
             </div>
           </Step>
 
-          <Step key="dieline" n="05" title={t("step.05")}>
+          <Step key="dieline" n="05" titleKey="step.05">
             <label className="block cursor-pointer">
               <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
                 {dieline ? (
@@ -1020,9 +1021,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
               Illustrator with File › Open.
             </p>
             <div className="mt-5 border-t pt-4">
-              <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">
-                {t("st.master")}
-              </p>
+              <EditableTitle k="st.master" as="p" className="mb-2 font-mono text-xs uppercase tracking-wider text-accent" />
               <label className="block cursor-pointer">
                 <div className="bg-grid dash-cut flex aspect-[2/1] w-full items-center justify-center overflow-hidden rounded-md bg-muted">
                   {masterDieline ? (

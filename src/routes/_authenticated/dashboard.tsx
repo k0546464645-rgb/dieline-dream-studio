@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { EditableTitle } from "@/components/EditableTitle";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Projects — Dieline Studio" }, { name: "description", content: "All packaging projects." }, { property: "og:title", content: "Projects — Dieline Studio" }, { property: "og:description", content: "All packaging projects." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -87,8 +88,8 @@ function Dashboard() {
       <div className="mx-auto max-w-[1500px]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="font-mono text-xs uppercase tracking-widest text-accent">{t("dash.control")}</p>
-            <h1 className="text-4xl font-extrabold tracking-tight">{t("dash.title")}</h1>
+            <EditableTitle k="dash.control" as="p" className="font-mono text-xs uppercase tracking-widest text-accent" />
+            <EditableTitle k="dash.title" as="h1" className="text-4xl font-extrabold tracking-tight" />
           </div>
           <div className="flex flex-wrap gap-2">
             <div className="relative">

@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileManager } from "@/components/FileManager";
 import { BackgroundRemoval } from "@/components/BackgroundRemoval";
 import { usePrefs, type DictKey } from "@/lib/prefs";
+import { EditableTitle } from "@/components/EditableTitle";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
   head: () => ({ meta: [{ title: "Project — Dieline Studio" }, { name: "description", content: "Packaging project workspace." }, { property: "og:title", content: "Project — Dieline Studio" }, { property: "og:description", content: "Packaging project workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
@@ -169,12 +170,12 @@ function ProjectPage() {
 
       <Tabs defaultValue="design" className="mt-5">
         <TabsList>
-          <TabsTrigger value="design">{t("tab.design")}</TabsTrigger>
-          <TabsTrigger value="approvals">{t("tab.approvals")} {approvals.data?.some((a) => a.status !== "pending" && !a.applied && a.status !== "approved") ? "•" : ""}</TabsTrigger>
-          <TabsTrigger value="files">{t("tab.files")} ({files.data?.length ?? 0})</TabsTrigger>
-          {p.project_type !== "single" && <TabsTrigger value="items">{t("tab.items")}</TabsTrigger>}
-          <TabsTrigger value="details">{t("tab.details")}</TabsTrigger>
-          <TabsTrigger value="history">{t("tab.history")}</TabsTrigger>
+          <TabsTrigger value="design"><EditableTitle k="tab.design" inline /></TabsTrigger>
+          <TabsTrigger value="approvals"><EditableTitle k="tab.approvals" inline /> {approvals.data?.some((a) => a.status !== "pending" && !a.applied && a.status !== "approved") ? "•" : ""}</TabsTrigger>
+          <TabsTrigger value="files"><EditableTitle k="tab.files" inline /> ({files.data?.length ?? 0})</TabsTrigger>
+          {p.project_type !== "single" && <TabsTrigger value="items"><EditableTitle k="tab.items" inline /></TabsTrigger>}
+          <TabsTrigger value="details"><EditableTitle k="tab.details" inline /></TabsTrigger>
+          <TabsTrigger value="history"><EditableTitle k="tab.history" inline /></TabsTrigger>
         </TabsList>
 
         <TabsContent value="design" forceMount className="data-[state=inactive]:hidden">
