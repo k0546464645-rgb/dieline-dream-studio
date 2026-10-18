@@ -6,6 +6,8 @@ export type ConceptContext = {
   styleGuide?: { text: string; images: string[] } | undefined;
   learnings?: string | undefined;
   autopilot?: boolean | undefined;
+  ideaVisuals?: boolean | undefined;
+  language?: "he" | "en" | undefined;
 };
 
 export function streamConcept(
