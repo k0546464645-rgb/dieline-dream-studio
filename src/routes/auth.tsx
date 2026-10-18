@@ -7,6 +7,7 @@ import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: z.object({ redirect: z.string().optional() }),
@@ -34,6 +35,7 @@ function safePath(p?: string) {
 }
 
 function AuthPage() {
+  const { t } = usePrefs();
   const { redirect } = Route.useSearch();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"in" | "up">("in");
@@ -95,9 +97,7 @@ function AuthPage() {
           <h1 className="mt-4 text-6xl font-extrabold leading-[0.95] tracking-tight">
             Design.<br />Approve.<br /><span className="text-cut">Print.</span>
           </h1>
-          <p className="mt-6 max-w-sm text-sm leading-relaxed text-paper/60">
-            הסטודיו שמנהל את כל תהליך האריזה — מהקונספט ועד הקובץ המוכן לדפוס.
-          </p>
+          <p className="mt-6 max-w-sm text-sm leading-relaxed text-paper/60">{t("auth.brand")}</p>
         </div>
         <p className="relative font-mono text-[10px] uppercase tracking-widest text-paper/40">packaging workflow · v2 · est. 2026</p>
       </div>
@@ -109,34 +109,34 @@ function AuthPage() {
             <span className="gradient-accent flex size-9 items-center justify-center rounded-xl font-mono text-xs font-bold text-accent-foreground">DS</span>
             <span className="font-mono text-xs uppercase tracking-[0.3em] text-muted-foreground">Dieline Studio</span>
           </div>
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent">{mode === "in" ? "studio access" : "join the studio"}</p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight">{mode === "in" ? "Welcome back" : "Create your account"}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{mode === "in" ? "Sign in to continue to your projects." : "One account for the whole packaging workflow."}</p>
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-accent">{mode === "in" ? t("auth.access") : t("auth.join")}</p>
+          <h2 className="mt-2 text-3xl font-extrabold tracking-tight">{mode === "in" ? t("auth.welcome") : t("auth.create")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{mode === "in" ? t("auth.subin") : t("auth.subup")}</p>
 
           <Button variant="outline" className="mt-8 w-full" onClick={google}>
-            Continue with Google
+            {t("auth.google")}
           </Button>
           <div className="my-5 flex items-center gap-3">
             <span className="h-px flex-1 bg-border" />
-            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">or with email</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">{t("auth.or")}</span>
             <span className="h-px flex-1 bg-border" />
           </div>
 
           <form onSubmit={submit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Email</Label>
+              <Label>{t("auth.email")}</Label>
               <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-card" placeholder="you@studio.com" />
             </div>
             <div className="space-y-1.5">
-              <Label>Password</Label>
+              <Label>{t("auth.password")}</Label>
               <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-card" placeholder="••••••••" />
             </div>
             <Button type="submit" variant="cut" className="w-full" disabled={busy}>
-              {mode === "in" ? "Sign in" : "Create account"}
+              {mode === "in" ? t("auth.signin") : t("auth.signup")}
             </Button>
           </form>
           <button onClick={() => setMode(mode === "in" ? "up" : "in")} className="mt-5 w-full text-center text-sm text-muted-foreground transition-colors hover:text-foreground">
-            {mode === "in" ? "New here? Create an account" : "Have an account? Sign in"}
+            {mode === "in" ? t("auth.toUp") : t("auth.toIn")}
           </button>
         </div>
       </div>
