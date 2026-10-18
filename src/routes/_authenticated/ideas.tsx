@@ -124,12 +124,24 @@ function IdeasChat() {
       const visual = visuals[selected];
       const source = projectProductSource(sourceMode, visual?.final ? visual.image : undefined, productPhoto);
       const concept = visual?.content ?? lastAssistant;
+      let adaptedMockup: string | undefined;
+      if (sourceMode === "upload" && source instanceof File) {
+        const form = new FormData();
+        form.append("image[]", source);
+        form.append("prompt", `Create a photorealistic packaging design mockup of the product in the FIRST reference image. Preserve its actual product shape, proportions, material and structure. Apply this concept's label, colors, typography and graphic style to the real product, not to an invented replacement. Show the complete product in a clear front view on a neutral studio backdrop. Any second reference image shows the style direction only, never the product geometry.\nCONCEPT AND STYLE GUIDE:\n${concept.slice(0, 8000)}`);
+        if (visual?.image && visual.final) {
+          const blob = await (await fetch(visual.image)).blob();
+          form.append("image[]", new File([blob], "style-reference.png", { type: blob.type }));
+        }
+        await streamImage("/api/edit-image", form, (image, done) => { if (done) adaptedMockup = image; }, undefined, await authHeaders());
+      }
       // Upload everything before creating the project: no navigation until all files are ready.
       const folder = `ideas/${crypto.randomUUID()}`;
       const productPath = await uploadToStudio(folder, source, source instanceof File ? source.name : "generated-product.png");
       const mockupPath = visual?.image && visual.final
         ? sourceMode === "generated" ? productPath : await uploadToStudio(folder, visual.image, "concept-mockup.png")
         : undefined;
+      const adaptedPath = adaptedMockup ? await uploadToStudio(folder, adaptedMockup, "real-product-mockup.png") : undefined;
       const { data: p, error } = await supabase.from("projects").insert({
         name: projectName.trim(), project_type: "single", stage: "concept", messages: messages as never,
         approved_concept: concept, style_notes: concept, product_path: productPath,
@@ -137,6 +149,7 @@ function IdeasChat() {
       if (error) throw error;
       const rows = [{ project_id: p.id, kind: "product", path: productPath, label: source instanceof File ? source.name : visual?.title ?? "Product" }];
       if (mockupPath) rows.push({ project_id: p.id, kind: sourceMode === "generated" ? "mockup" : "concept", path: mockupPath, label: visual?.title ?? "Concept" });
+      if (adaptedPath) rows.push({ project_id: p.id, kind: "mockup", path: adaptedPath, label: he ? "הדמיית המוצר שהועלה" : "Uploaded product mockup" });
       const guidePath = await uploadToStudio(folder, new Blob([concept], { type: "text/plain" }), "style-guide.txt");
       rows.push({ project_id: p.id, kind: "docs", path: guidePath, label: he ? "סטייל גייד" : "Style guide" });
       const { error: fileError } = await supabase.from("project_files").insert(rows);

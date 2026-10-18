@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileManager } from "@/components/FileManager";
+import { BackgroundRemoval } from "@/components/BackgroundRemoval";
 import { usePrefs, type DictKey } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
