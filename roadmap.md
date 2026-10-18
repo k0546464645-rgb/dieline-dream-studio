@@ -2,7 +2,10 @@
 - [x] Customers page: scrollable customer list + quick add form (name, contact, email, phone, notes) with per-customer project count
 - [ ] Customer billing system: charge per hour or per design concept (user will spec later)
 - [ ] Design version history: keep mockups and dieline artworks per version so the designer can return to earlier versions
-- [ ] Bilingual UI: full Hebrew/English interface with a language switcher
+- [~] Bilingual UI: HE/EN switcher in the sidebar, full RTL/LTR + translated chrome on dashboard, project page, studio steps, customers, styles, ideas, auth (verified live); secondary panels (InfoForm fields, approval/sharing dialogs, import buttons) still show bilingual strings
+- [x] Interface personalization: settings dialog (sidebar) — accent color, neon/paper theme, font (Bricolage/Heebo/Assistant), persisted on device (verified live)
+- [x] Step windows reorderable by drag handle on the project page, order persisted (verified live)
+- [x] Smart file manager in the Folder tab: search, kind filters, sort, grid/list view, multi-select with bulk download/delete, upload button (verified live)
 - [x] UI redesign: dark studio console theme, fixed sidebar nav, new landing page (verified live)
 - [~] Streamline & automate workflow steps: auto chain dieline→artwork→QC implemented; concept→mockup already auto
 - [x] After product photo upload: AI automatically asks the right questions (verified live end-to-end)

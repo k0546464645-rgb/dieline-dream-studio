@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logActivity, pathToFile, signedUrl, uploadToStudio } from "@/lib/storage";
 import { toast } from "sonner";
