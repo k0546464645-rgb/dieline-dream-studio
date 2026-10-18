@@ -94,12 +94,12 @@ function SortableSteps({ group, className, children }: { group: string; classNam
 }
 
 
-function Step({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
+function Step({ n, titleKey, children }: { n: string; titleKey: DictKey; children: React.ReactNode }) {
   return (
     <section className="crop-marks rounded-lg border bg-card p-5">
       <div className="mb-4 flex items-baseline gap-3">
         <span className="font-mono text-xs text-accent">{n}</span>
-        <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+        <EditableTitle k={titleKey} as="h2" className="text-lg font-semibold tracking-tight" />
       </div>
       {children}
     </section>

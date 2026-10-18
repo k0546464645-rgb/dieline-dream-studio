@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ean13Check } from "@/lib/ean13";
+import { EditableTitle } from "@/components/EditableTitle";
+import type { DictKey } from "@/lib/prefs";
 import type { PackInfo } from "@/lib/studio-client";
 
 export const LANGUAGES = ["Hebrew", "English", "Arabic", "Russian", "French", "Spanish", "German"];
@@ -68,14 +70,14 @@ function barcodeStatus(raw: string) {
 }
 
 function Panel({
-  title,
-  subtitle,
+  titleKey,
+  subtitleKey,
   open,
   onOpenChange,
   children,
 }: {
-  title: string;
-  subtitle: string;
+  titleKey: DictKey;
+  subtitleKey: DictKey;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   children: React.ReactNode;
@@ -84,8 +86,8 @@ function Panel({
     <Collapsible open={open} onOpenChange={onOpenChange} className="dash-cut rounded-md">
       <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 p-3 text-start">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-wider text-accent">{title}</p>
-          <p className="text-xs text-muted-foreground">{subtitle}</p>
+          <EditableTitle k={titleKey} as="p" className="font-mono text-[11px] uppercase tracking-wider text-accent" />
+          <EditableTitle k={subtitleKey} as="p" className="text-xs text-muted-foreground" />
         </div>
         <ChevronDown className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
       </CollapsibleTrigger>
@@ -104,8 +106,8 @@ export function InfoForm({ value, onChange }: { value: PackInfo; onChange: (v: P
   return (
     <div className="space-y-4">
       <Panel
-        title="Product info · פרטי מוצר"
-        subtitle="Packaging language, barcode, item number"
+        titleKey="info.product"
+        subtitleKey="info.product.sub"
         open={baseOpen}
         onOpenChange={setBaseOpen}
       >
@@ -135,7 +137,7 @@ export function InfoForm({ value, onChange }: { value: PackInfo; onChange: (v: P
       </Panel>
 
 
-      <Panel title="Front panel · צד קידמי" subtitle="Product name, tagline, scent — what the shopper sees first" open={frontOpen} onOpenChange={setFrontOpen}>
+      <Panel titleKey="info.front" subtitleKey="info.front.sub" open={frontOpen} onOpenChange={setFrontOpen}>
         <div className="space-y-1.5">
           <Label>Product name</Label>
           <Input dir={dir} value={value.productName} onChange={set("productName")} className="bg-background" />
@@ -150,7 +152,7 @@ export function InfoForm({ value, onChange }: { value: PackInfo; onChange: (v: P
         </div>
       </Panel>
 
-      <Panel title="Back panel · צד אחורי" subtitle="Marketing, instructions, ingredients, warnings, legal details" open={backOpen} onOpenChange={setBackOpen}>
+      <Panel titleKey="info.back" subtitleKey="info.back.sub" open={backOpen} onOpenChange={setBackOpen}>
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Marketing text (עברית)</Label>
