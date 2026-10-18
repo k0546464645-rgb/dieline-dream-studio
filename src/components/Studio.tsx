@@ -24,8 +24,9 @@ import { ItemsImport } from "@/components/ItemsImport";
 import { VoiceButton } from "@/components/VoiceButton";
 import { AttachmentStrip, useChatAttachments, useImageDrop } from "@/components/ChatAttachments";
 import { imageFilesFrom } from "@/lib/chat-images";
-import { GripVertical, ImagePlus } from "lucide-react";
+import { Check, Download, GripVertical, ImagePlus, Loader2, Minus, Plus, Sparkles } from "lucide-react";
 import { usePrefs } from "@/lib/prefs";
+import { PACKAGING_OPTIONS, mockupSlots, mockupKind, savedMockupSlot, type MockupCounts } from "@/lib/mockup-layout";
 
 /** Drag-to-reorder wrapper for the step windows; order persists per column in localStorage. */
 function SortableSteps({ group, className, children }: { group: string; className?: string | undefined; children: React.ReactNode }) {
@@ -120,14 +121,6 @@ function StepButton({
   );
 }
 
-const PACK_TYPES = [
-  ["window", "Color box with window", "packed in a printed color box with a transparent window showing the product inside"],
-  ["display", "Display box", "standing in a retail counter display box with a printed header card"],
-  ["blister", "Blister pack", "sealed in blister packaging: clear plastic blister on a printed backing card"],
-  ["master", "Shipping carton", "packed inside a printed shipping master carton"],
-  ["shelf", "On a store shelf", "standing on a supermarket store shelf among other products, realistic retail scene"],
-] as const;
-
 function ImageSlot({
   src,
   final,
@@ -139,17 +132,18 @@ function ImageSlot({
   empty: string;
   loading?: boolean | undefined;
 }) {
+  const { lang } = usePrefs();
   return (
     <div className="bg-grid flex aspect-square w-full items-center justify-center overflow-hidden rounded-md border bg-muted">
       {src ? (
         <img
           src={src}
-          alt=""
+          alt={empty}
           className={`h-full w-full object-contain transition-[filter] duration-700 ${final ? "blur-0" : "blur-2xl"}`}
         />
       ) : (
         <p className="px-6 text-center font-mono text-xs text-muted-foreground">
-          {loading ? "Rendering…" : empty}
+          {loading ? (lang === "he" ? "יוצר הדמיה…" : "Rendering…") : empty}
         </p>
       )}
     </div>
@@ -190,17 +184,27 @@ export function Studio({
   onInstructionDone?: () => void;
   onFilesChanged?: () => void;
 }) {
-  const { t } = usePrefs();
+  const { t, lang } = usePrefs();
+  const he = lang === "he";
   const [product, setProduct] = useState<string>();
   const [productFile, setProductFile] = useState<File>();
   const [messages, setMessages] = useState<ChatMsg[]>(Array.isArray(project.messages) ? (project.messages as ChatMsg[]) : []);
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
 
-  const [mockups, setMockups] = useState<{ front?: string; back?: string }>({});
-  const [mockFinal, setMockFinal] = useState<{ front?: boolean; back?: boolean }>({});
-  const [mockBusy, setMockBusy] = useState<"front" | "back" | null>(null);
-  const [packType, setPackType] = useState("window");
+  const [mockups, setMockups] = useState<Record<string, string | undefined>>({});
+  const [mockFinal, setMockFinal] = useState<Record<string, boolean | undefined>>({});
+  const [mockBusy, setMockBusy] = useState<string | null>(null);
+  const [packCounts, setPackCounts] = useState<MockupCounts>({});
+  const [mockBatch, setMockBatch] = useState(false);
+  const mockLock = useRef(false);
+  const slots = mockupSlots(packCounts);
+
+  function setPackagingCount(id: string, count: number) {
+    const next = { ...packCounts, [id]: Math.max(0, count) };
+    setPackCounts(next);
+    localStorage.setItem(`ds-mockup-requests:${project.id}`, JSON.stringify(next));
+  }
 
   const [dieline, setDieline] = useState<string>();
   const [dielineName, setDielineName] = useState("");
@@ -250,6 +254,15 @@ export function Studio({
   // Load saved product + latest dieline / mockup / artwork
   useEffect(() => {
     (async () => {
+      let savedCounts: MockupCounts | undefined;
+      try {
+        const stored = localStorage.getItem(`ds-mockup-requests:${project.id}`);
+        if (stored) {
+          const parsed = JSON.parse(stored) as MockupCounts;
+          savedCounts = Object.fromEntries(PACKAGING_OPTIONS.map(({ id }) => [id, Number.isSafeInteger(parsed[id]) && (parsed[id] ?? 0) >= 0 ? parsed[id] : 0])) as MockupCounts;
+          setPackCounts(savedCounts);
+        }
+      } catch { /* Fall back to saved images. */ }
       if (project.product_path) {
         const f = await pathToFile(project.product_path, "product.png").catch(() => undefined);
         if (f) {
@@ -262,13 +275,26 @@ export function Studio({
         .from("project_files")
         .select("kind,path,label,created_at")
         .eq("project_id", project.id)
-        .in("kind", ["dieline", "mockup", "mockup-back", "artwork", "dieline-master", "artwork-master"])
+        .or("kind.in.(dieline,artwork,dieline-master,artwork-master),kind.like.mockup%")
         .order("created_at", { ascending: false });
       const latest = (k: string) => data?.find((d) => d.kind === k);
       const d = latest("dieline"), m = latest("mockup"), mb = latest("mockup-back"), a = latest("artwork");
       if (d) { setDieline(await urlToDataUrl(await signedUrl(d.path))); setDielineName(d.label || "dieline"); }
       if (m) { const s = await urlToDataUrl(await signedUrl(m.path)); setMockups((x) => ({ ...x, front: s })); setMockFinal((x) => ({ ...x, front: true })); }
       if (mb) { const s = await urlToDataUrl(await signedUrl(mb.path)); setMockups((x) => ({ ...x, back: s })); setMockFinal((x) => ({ ...x, back: true })); }
+      const restored = new Set<string>();
+      const restoredCounts: MockupCounts = {};
+      for (const file of data ?? []) {
+        const slot = savedMockupSlot(file.kind);
+        if (!slot || slot === "front" || slot === "back" || restored.has(slot)) continue;
+        restored.add(slot);
+        const image = await urlToDataUrl(await signedUrl(file.path));
+        setMockups((current) => ({ ...current, [slot]: image }));
+        setMockFinal((current) => ({ ...current, [slot]: true }));
+        const [id, number] = slot.split("-");
+        if (id) restoredCounts[id] = Math.max(restoredCounts[id] ?? 0, Number(number));
+      }
+      if (!savedCounts) setPackCounts(restoredCounts);
       if (a) { setArt(await urlToDataUrl(await signedUrl(a.path))); setArtFinal(true); }
       const dm = latest("dieline-master"), am = latest("artwork-master");
       if (dm) { setMasterDieline(await urlToDataUrl(await signedUrl(dm.path))); setMasterDielineName(dm.label || "master carton"); }
@@ -446,20 +472,23 @@ export function Studio({
     }
   }
 
-  async function renderMockup(view: "front" | "back" = "front", conceptText?: string) {
+  async function renderMockup(view = "front", conceptText?: string, inBatch = false) {
+    if (mockLock.current && !inBatch) return false;
     const concept = conceptText || approved || lastAssistant;
     if (!productFile || !concept) {
-      toast.error("Upload a product and create a concept first");
-      return;
+      toast.error(he ? "יש להעלות מוצר וליצור קונספט תחילה" : "Upload a product and create a concept first");
+      return false;
     }
+    const slot = slots.find((item) => item.id === view);
+    if (!slot) return false;
+    mockLock.current = true;
     setMockBusy(view);
     setMockups((m) => ({ ...m, [view]: undefined }));
     setMockFinal((f) => ({ ...f, [view]: false }));
-    const pack = PACK_TYPES.find(([k]) => k === packType);
     const form = new FormData();
     form.append(
       "prompt",
-      `Photorealistic 3D studio render of THIS exact product (keep its real shape, proportions, material and structure) ${pack ? pack[2] : "with new packaging graphics applied"} according to this design concept. ${view === "front" ? "Straight-on FRONT view: show the front panel design clearly, centered." : "Straight-on BACK view: show the back panel with its full information layout (text blocks, barcode area)."} Soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.${styleNotes ? `\n\nEXISTING BRAND STYLE (logo, fonts, imagery to reuse):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
+      `Photorealistic 3D studio render of THIS exact product (keep its real shape, proportions, material and structure) with the approved packaging graphics applied according to this design concept. ${slot.prompt} Soft studio lighting, seamless neutral backdrop, subtle shadow. If several concepts are listed, use the FINAL CONCEPT or the first one.${styleNotes ? `\n\nEXISTING BRAND STYLE (logo, fonts, imagery to reuse):\n${styleNotes.slice(0, 1200)}` : ""}\n\nCONCEPT:\n${concept.slice(0, 3500)}`,
     );
     form.append("image[]", productFile);
     if (refFile) form.append("image[]", refFile);
@@ -467,12 +496,30 @@ export function Studio({
       await streamImage("/api/edit-image", form, (src, fin) => {
         setMockups((m) => ({ ...m, [view]: src }));
         setMockFinal((f) => ({ ...f, [view]: fin }));
-        if (fin) void saveFile(view === "front" ? "mockup" : "mockup-back", src, view === "front" ? "3D design — front" : "3D design — back");
+        if (fin) void saveFile(mockupKind(view), src, `3D — ${he ? slot.he : slot.en}`);
       }, undefined, await authHeaders());
+      return true;
     } catch (e) {
       toast.error((e as Error).message);
+      return false;
     } finally {
       setMockBusy(null);
+      if (!inBatch) mockLock.current = false;
+    }
+  }
+
+  async function renderRequestedMockups() {
+    if (mockLock.current) return;
+    mockLock.current = true;
+    setMockBatch(true);
+    try {
+      for (const slot of slots) {
+        if (mockFinal[slot.id] && mockups[slot.id]) continue;
+        if (!await renderMockup(slot.id, undefined, true)) break;
+      }
+    } finally {
+      mockLock.current = false;
+      setMockBatch(false);
     }
   }
 
@@ -507,10 +554,10 @@ export function Studio({
     const form = new FormData();
     form.append(
       "prompt",
-      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockups.front ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockups["front"] ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
     form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
-    if (mockups.front && mockFinal.front) form.append("image[]", await dataUrlToFile(mockups.front, "mockup.png"));
+    if (mockups["front"] && mockFinal["front"]) form.append("image[]", await dataUrlToFile(mockups["front"], "mockup.png"));
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setArt(src);
@@ -599,8 +646,8 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
         options={options}
         approved={approved}
         thinking={thinking}
-        mockup={mockups.front}
-        mockupFinal={mockFinal.front ?? false}
+        mockup={mockups["front"]}
+        mockupFinal={mockFinal["front"] ?? false}
         mockBusy={mockBusy === "front"}
         onChoose={choose}
         onPreview={(o, src) => void saveFile("concept", src, `Concept ${o.n}: ${o.name}`)}
@@ -855,47 +902,44 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
 
         <SortableSteps group="right" className="flex flex-col gap-6">
           <Step key="mockup" n="04" title={t("step.04")}>
-            <p className="mb-2 font-mono text-xs uppercase tracking-wider text-accent">{t("st.packtype")}</p>
-            <div className="mb-4 flex flex-wrap gap-2">
-              {PACK_TYPES.map(([k, label]) => (
-                <button
-                  key={k}
-                  onClick={() => setPackType(k)}
-                  className={`rounded-full border px-3 py-1.5 text-xs transition-colors ${packType === k ? "border-accent bg-background text-accent ring-1 ring-accent" : "text-muted-foreground hover:border-foreground hover:text-foreground"}`}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+              <p className="font-mono text-xs text-accent">{he ? "תצורות אריזה" : "Packaging configurations"}</p>
+              <span className="text-xs text-muted-foreground">{slots.length} {he ? "הדמיות" : "mockups"}</span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {(["front", "back"] as const).map((view) => (
-                <div key={view}>
-                  <ImageSlot
-                    src={mockups[view]}
-                    final={mockFinal[view]}
-                    loading={mockBusy === view}
-                    empty={view === "front" ? "Front view" : "Back view"}
-                  />
-                  <p className="mt-1.5 text-center font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {view === "front" ? "Front · קדימה" : "Back · אחורה"}
-                  </p>
-                  <div className="mt-2 flex justify-center gap-2">
-                    <StepButton
-                      n="04"
-                      size="sm"
-                      onClick={() => renderMockup(view)}
-                      disabled={mockBusy !== null || !concept || !productFile}
-                    >
-                      {mockBusy === view ? "…" : mockups[view] ? t("st.rerender") : t("st.render")}
+            <div className="mb-4 space-y-2">
+              {PACKAGING_OPTIONS.map(({ id, en, he: hebrew }) => {
+                const count = packCounts[id] ?? 0;
+                const label = he ? hebrew : en;
+                return <div key={id} className="flex min-w-0 items-center gap-2">
+                  <Button size="sm" variant={count ? "secondary" : "outline"} aria-pressed={count > 0} disabled={mockBusy !== null || mockBatch} onClick={() => setPackagingCount(id, count ? 0 : 1)} className="min-w-0 flex-1 justify-start whitespace-normal text-start">
+                    {count > 0 ? <Check /> : <Plus />}{label}
+                  </Button>
+                  {count > 0 && <div className="flex shrink-0 items-center gap-1">
+                    <Button size="icon" variant="ghost" title={he ? `פחות הדמיות: ${label}` : `Fewer mockups: ${label}`} aria-label={he ? `פחות הדמיות: ${label}` : `Fewer mockups: ${label}`} disabled={mockBusy !== null || mockBatch} onClick={() => setPackagingCount(id, count - 1)}><Minus /></Button>
+                    <span className="w-6 text-center text-xs tabular-nums">{count}</span>
+                    <Button size="icon" variant="ghost" title={he ? `עוד הדמיה: ${label}` : `More mockups: ${label}`} aria-label={he ? `עוד הדמיה: ${label}` : `More mockups: ${label}`} disabled={mockBusy !== null || mockBatch} onClick={() => setPackagingCount(id, count + 1)}><Plus /></Button>
+                  </div>}
+                </div>;
+              })}
+            </div>
+            <Button variant="cut" className="mb-4 w-full whitespace-normal" onClick={renderRequestedMockups} disabled={mockBusy !== null || mockBatch || !concept || !productFile || slots.every((slot) => mockFinal[slot.id] && mockups[slot.id])}>
+              {mockBatch ? <Loader2 className="animate-spin" /> : <Sparkles />}{he ? "יצירת ההדמיות החסרות" : "Generate missing mockups"}
+            </Button>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {slots.map((slot) => {
+                const view = slot.id;
+                const label = he ? slot.he : slot.en;
+                return <div key={view} data-mockup-slot={view} className="min-w-0">
+                  <ImageSlot src={mockups[view]} final={mockFinal[view]} loading={mockBusy === view} empty={label} />
+                  <p className="mt-1.5 break-words text-center text-xs font-medium">{label}</p>
+                  <div className="mt-2 flex flex-wrap justify-center gap-2">
+                    <StepButton n="04" size="sm" onClick={() => renderMockup(view)} disabled={mockBusy !== null || mockBatch || !concept || !productFile}>
+                      {mockBusy === view ? <Loader2 className="animate-spin" /> : null}{mockBusy === view ? (he ? "יוצר…" : "Rendering…") : mockups[view] ? t("st.rerender") : t("st.render")}
                     </StepButton>
-                    {mockups[view] && mockFinal[view] && (
-                      <Button size="sm" variant="outline" onClick={() => download(mockups[view]!, `mockup-${view}.png`)}>
-                        PNG
-                      </Button>
-                    )}
+                    {mockups[view] && mockFinal[view] && <Button size="icon" variant="outline" title={he ? `הורדת ${label}` : `Download ${label}`} aria-label={he ? `הורדת ${label}` : `Download ${label}`} onClick={() => { const image = mockups[view]; if (image) download(image, `mockup-${view}.png`); }}><Download /></Button>}
                   </div>
-                </div>
-              ))}
+                </div>;
+              })}
             </div>
           </Step>
 
