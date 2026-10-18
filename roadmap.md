@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Restore neon-purple and white default; keep designer-selectable interface colors
 - [ ] Ideas: automatic style guide + mockups without product photos; carry generated products or uploaded photos into projects
 - [ ] Remove background: upload image, preserve product, download transparent PNG
 - [x] Customers page: scrollable customer list + quick add form (name, contact, email, phone, notes) with per-customer project count
