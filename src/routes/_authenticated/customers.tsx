@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/customers")({
-  head: () => ({ meta: [{ title: "Customers — Dieline Studio" }, { name: "description", content: "Customer list and quick onboarding." }] }),
+  head: () => ({ meta: [{ title: "Customers — Dieline Studio" }, { name: "description", content: "Customer list and quick onboarding." }, { property: "og:title", content: "Customers — Dieline Studio" }, { property: "og:description", content: "Customer list and quick onboarding." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Customers,
 });
 

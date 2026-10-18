@@ -18,7 +18,7 @@ import { FileManager } from "@/components/FileManager";
 import { usePrefs, type DictKey } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/projects/$id")({
-  head: () => ({ meta: [{ title: "Project — Dieline Studio" }, { name: "description", content: "Packaging project workspace." }] }),
+  head: () => ({ meta: [{ title: "Project — Dieline Studio" }, { name: "description", content: "Packaging project workspace." }, { property: "og:title", content: "Project — Dieline Studio" }, { property: "og:description", content: "Packaging project workspace." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: ProjectPage,
 });
 

@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/styles")({
-  head: () => ({ meta: [{ title: "Style guides — Dieline Studio" }, { name: "description", content: "Brand and licensed style guide library." }] }),
+  head: () => ({ meta: [{ title: "Style guides — Dieline Studio" }, { name: "description", content: "Brand and licensed style guide library." }, { property: "og:title", content: "Style guides — Dieline Studio" }, { property: "og:description", content: "Brand and licensed style guide library." }, { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" }] }),
   component: Styles,
 });
 
