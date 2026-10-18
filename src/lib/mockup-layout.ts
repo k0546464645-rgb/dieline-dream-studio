@@ -13,7 +13,7 @@ export function mockupSlots(counts: MockupCounts): MockupSlot[] {
   return [
     { id: "front", en: "Front", he: "קדימה", prompt: "Apply the approved design directly to the original product. Straight-on FRONT view, showing the front label clearly. Do not add optional outer packaging." },
     { id: "back", en: "Back", he: "אחורה", prompt: "Apply the approved design directly to the original product. Straight-on BACK view, showing the full back information layout and barcode area. Do not add optional outer packaging." },
-    ...PACKAGING_OPTIONS.flatMap((option) => Array.from({ length: Number.isSafeInteger(counts[option.id]) && (counts[option.id] ?? 0) > 0 ? counts[option.id] : 0 }, (_, index) => ({
+    ...PACKAGING_OPTIONS.flatMap((option) => Array.from({ length: Number.isSafeInteger(counts[option.id]) && (counts[option.id] ?? 0) > 0 ? (counts[option.id] ?? 0) : 0 }, (_, index) => ({
       id: `${option.id}-${index + 1}`, en: `${option.en} ${index + 1}`, he: `${option.he} ${index + 1}`,
       prompt: `Show this product ${option.prompt}. Show the entire packaging and product clearly in a three-quarter view. This is presentation variation ${index + 1}; keep the approved branding consistent.`,
     }))),
