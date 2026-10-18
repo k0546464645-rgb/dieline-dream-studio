@@ -145,6 +145,7 @@ function ProjectPage() {
           <p className="text-sm text-muted-foreground">{[projectTypeLabel(p.project_type), p.customer_name, p.supplier && `Supplier: ${p.supplier}`, p.supplier_item].filter(Boolean).join(" · ")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <BackgroundRemoval />
           <select
             value={p.style_guide_id ?? ""}
             onChange={(e) => update({ style_guide_id: e.target.value || null })}
