@@ -1,4 +1,5 @@
 # Roadmap
+- [ ] Designer testing access before custom domain: user creates a shared preview link via Share; studio access awaits the designer's email and registered account.
 - [x] 3D mockups: permanent front/back views, multiple optional packaging selections, per-type image counts and automatic extra windows (verified selection/reload, real blister generation, saved-image restore and narrow-screen layout)
 - [x] Restore neon-purple and white default; keep designer-selectable interface colors (verified color change and persistence)
 - [x] Ideas: automatic style guide + mockups without product photos; carry generated products or redesign uploaded photos into projects (verified both paths and reload)
