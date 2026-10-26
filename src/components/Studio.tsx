@@ -600,19 +600,39 @@ STRICT RULES:
     );
     form.append("input_fidelity", "high");
     form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
+    const srcImages = refs.slice(0, 4).map(([, src]) => src);
     for (const [v, src] of refs.slice(0, 4)) form.append("image[]", await dataUrlToFile(src, `${v.replace(/\W+/g, "-")}.png`));
-    try {
-      await streamImage("/api/edit-image", form, (src, fin) => {
-        setArt(src);
-        setArtFinal(fin);
-        if (fin) {
-          void saveFile("artwork", src, extra ? "Artwork (revised)" : "Artwork");
-          // Auto chain: run AI quality control as soon as the artwork is ready
-          void runQc(src);
+    // Transfer mode: find the panels + faces in parallel, then paste the ORIGINAL
+    // pixels over the AI layout so text/graphics are never redrawn or translated.
+    const layoutP = transferOnly && !extra ? detectLayout(dl, srcImages).catch(() => undefined) : undefined;
+    const finish = async (base?: string) => {
+      let out = base;
+      const layout = layoutP ? await layoutP : undefined;
+      if (layout) {
+        try {
+          out = await composeExact({ dieline: dl, designs: srcImages, layout, base });
+          toast.success(he ? "העיצוב המקורי הועתק לפריסה פיקסל-לפיקסל — הטקסטים לא שונו" : "Original design pasted onto the dieline pixel-for-pixel");
+        } catch {
+          /* keep AI result */
         }
+      }
+      if (!out) return;
+      setArt(out);
+      setArtFinal(true);
+      void saveFile("artwork", out, extra ? "Artwork (revised)" : "Artwork");
+      // Auto chain: run AI quality control as soon as the artwork is ready
+      void runQc(out);
+    };
+    try {
+      let finalSrc: string | undefined;
+      await streamImage("/api/edit-image", form, (src, fin) => {
+        if (fin) finalSrc = src;
+        else setArt(src);
       }, undefined, await authHeaders());
+      await finish(finalSrc);
     } catch (e) {
-      toast.error((e as Error).message);
+      if (layoutP) await finish();
+      else toast.error((e as Error).message);
     } finally {
       setArtBusy(false);
     }
