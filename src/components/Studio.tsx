@@ -557,13 +557,25 @@ export function Studio({
     setArtFinal(false);
     const form = new FormData();
     const refs = Object.entries(mockups).filter(([v, src]) => src && mockFinal[v]).slice(0, 3) as [string, string][];
+    if (product) refs.unshift(["original uploaded design", product]);
+    const transferOnly = refs.length > 0;
+    const transferPrompt = `TASK: TRANSFER AN EXISTING DESIGN ONTO A DIELINE — NOT A REDESIGN.
+The first image is a flat packaging DIELINE. The other images are the EXISTING, FINAL design (${refs.map(([v]) => v).join(", ")}, in that order). Place this existing design onto the matching dieline panels exactly as it is.
+STRICT RULES:
+- Copy every letter of every text EXACTLY as it appears (Hebrew and English). Do not rewrite, add, remove, translate, shorten or "improve" any text. Do not add new text blocks.
+- Keep the same logo, illustrations, colors, fonts, sizes and positions. Do not restyle or invent graphics.
+- Do not rearrange content between panels; front stays on the front panel, back stays on the back panel.
+- Only flatten the views (remove perspective, lighting, shadows) and scale them to fit each panel, with slight bleed.
+- Keep the dieline geometry and canvas framing exactly the same. Panels with no visible source stay as a plain extension of the background color.${extra ? `\n\nONLY THESE CHANGES ARE ALLOWED:\n${extra}` : ""}`;
     form.append(
       "prompt",
-      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${refs.length ? `\n\nCOPY 1:1 — HIGHEST PRIORITY: the following images are the APPROVED design (${refs.map(([v]) => v).join(", ")} views, in that order). Reproduce them ONE-TO-ONE on the matching dieline panels: the same logo, illustrations, layout, colors, typography, text wording and positions. Do NOT invent new graphics, do NOT restyle, do NOT change or translate any text. Only flatten them (remove perspective/lighting) and fit them onto the panels. Use the concept text only for panels not visible in these images.` : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+      transferOnly
+        ? transferPrompt
+        : `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
     form.append("input_fidelity", "high");
     form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
-    for (const [v, src] of refs) form.append("image[]", await dataUrlToFile(src, `mockup-${v}.png`));
+    for (const [v, src] of refs.slice(0, 4)) form.append("image[]", await dataUrlToFile(src, `${v.replace(/\W+/g, "-")}.png`));
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setArt(src);
