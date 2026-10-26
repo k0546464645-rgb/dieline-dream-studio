@@ -999,6 +999,9 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                   <Button onClick={exportSvg} disabled={svgBusy}>
                     {t("st.export")}
                   </Button>
+                  <Button variant="outline" onClick={exportAi} disabled={svgBusy}>
+                    Illustrator (.ai)
+                  </Button>
                   <Button variant="outline" onClick={() => download(art, "artwork.png")}>
                     PNG
                   </Button>
