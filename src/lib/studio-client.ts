@@ -29,6 +29,12 @@ export async function extractInfo(image: string) {
   return JSON.parse(out) as PackInfo & { styleNotes: string };
 }
 
+export async function detectLayout(dieline: string, designs: string[]) {
+  let out = "";
+  await streamResponses("/api/layout", { dieline, designs }, (d) => (out += d));
+  return JSON.parse(out) as import("@/lib/exact-layout").DielineLayout;
+}
+
 export async function authHeaders(): Promise<Record<string, string>> {
   const { supabase } = await import("@/integrations/supabase/client");
   const { data } = await supabase.auth.getSession();

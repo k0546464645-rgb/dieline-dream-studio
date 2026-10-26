@@ -18,6 +18,7 @@
 - [x] Task choice after product upload (create concept / design from approved concept)
 - [x] Task choice: direct design-to-dieline transfer — upload a photo of the designed product, transfer it onto the dieline directly (no concept/mockup stages; verified live)
 - [x] Artwork fidelity: strengthened transfer prompt (never translate, Hebrew stays Hebrew) + exact no-AI manual placement mode (drag/scale design onto dieline, export; verified live)
+- [x] Direct transfer keeps exact text: AI lays out the dieline, then the original design faces are pasted pixel-for-pixel onto detected panels (Hebrew never translated)
 - [x] Exported .ai file: layers were stretched to the page — now contain-fitted and centered so it opens clean in Illustrator
 - [x] Design board window to view concepts/design and choose direction
 - [x] Read uploaded dieline/artwork file to auto-fill info and extract style
