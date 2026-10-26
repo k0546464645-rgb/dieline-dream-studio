@@ -230,7 +230,8 @@ export function Studio({
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
   const concept = approved || lastAssistant;
   const options = approved ? [] : parseConcepts(lastAssistant);
-  const [task, setTask] = useState<"concept" | "ready" | "guide" | null>(null);
+  const [task, setTask] = useState<"concept" | "ready" | "guide" | "direct" | null>(null);
+  const [directDesigns, setDirectDesigns] = useState<string[]>([]);
   const [guidesList, setGuidesList] = useState<{ id: string; name: string; brand: string }[]>([]);
   const [pendingGuide, setPendingGuide] = useState<string | null>(null);
   const [conceptProjects, setConceptProjects] = useState<{ id: string; name: string; approved_concept: string }[]>([]);
@@ -278,7 +279,7 @@ export function Studio({
         .from("project_files")
         .select("kind,path,label,created_at")
         .eq("project_id", project.id)
-        .or("kind.in.(dieline,artwork,dieline-master,artwork-master),kind.like.mockup%")
+        .or("kind.in.(dieline,artwork,dieline-master,artwork-master),kind.like.mockup%,kind.like.design-direct%")
         .order("created_at", { ascending: false });
       const latest = (k: string) => data?.find((d) => d.kind === k);
       const d = latest("dieline"), m = latest("mockup"), mb = latest("mockup-back"), a = latest("artwork");
