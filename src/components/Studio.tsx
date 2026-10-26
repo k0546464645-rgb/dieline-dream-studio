@@ -759,6 +759,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                       ["concept", t("st.task.concept"), t("st.task.concept.d")],
                       ["ready", t("st.task.ready"), t("st.task.ready.d")],
                       ["guide", t("st.task.guide"), t("st.task.guide.d")],
+                      ["direct", t("st.task.direct"), t("st.task.direct.d")],
                     ] as const
                   ).map(([k, t, d]) => (
                     <button
