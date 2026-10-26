@@ -1069,6 +1069,20 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 onChange={(e) => onDieline(e.target.files?.[0])}
               />
             </label>
+            {dieline && manualSources.length > 0 && (
+              <div className="mt-3">
+                <ManualPlacement
+                  dieline={dieline}
+                  designs={manualSources}
+                  onApply={(png) => {
+                    setArt(png);
+                    setArtFinal(true);
+                    void saveFile("artwork", png, "Artwork (exact placement)");
+                    toast.success(he ? "העיצוב הונח על הפריסה בדיוק כפי שהוא" : "Design placed on the dieline exactly as-is");
+                  }}
+                />
+              </div>
+            )}
             {(art || artBusy) && (
               <div className="mt-3">
                 <ImageSlot src={art} final={artFinal} loading={artBusy} empty="Flat artwork appears here." />
