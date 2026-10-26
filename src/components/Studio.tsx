@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { streamImage } from "@/lib/stream-image";
 import { authHeaders } from "@/lib/studio-client";
+import { composeExact } from "@/lib/exact-layout";
 import {
   buildLayeredSvg,
   buildAiFile,
   dataUrlToFile,
+  detectLayout,
   dielineToPng,
   extractInfo,
   download,
