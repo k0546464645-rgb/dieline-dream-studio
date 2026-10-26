@@ -580,6 +580,7 @@ export function Studio({
     const form = new FormData();
     const refs = Object.entries(mockups).filter(([v, src]) => src && mockFinal[v]).slice(0, 3) as [string, string][];
     if (product) refs.unshift(["original uploaded design", product]);
+    if (task === "direct") refs.unshift(...directDesigns.filter(Boolean).slice(0, 4).map((src, i) => [`uploaded designed product ${i + 1}`, src] as [string, string]));
     const transferOnly = refs.length > 0;
     const transferPrompt = `TASK: TRANSFER AN EXISTING DESIGN ONTO A DIELINE — NOT A REDESIGN.
 The first image is a flat packaging DIELINE. The other images are the EXISTING, FINAL design (${refs.map(([v]) => v).join(", ")}, in that order). Place this existing design onto the matching dieline panels exactly as it is.
