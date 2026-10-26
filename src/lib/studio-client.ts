@@ -242,5 +242,5 @@ export async function buildAiFile(artwork: string, dieline: string, original?: A
   else page.drawImage(await embed(dieline), { x: 0, y: 0, width: w, height: h, blendMode: BlendMode.Multiply });
   doc.setTitle("Dieline artwork");
   doc.setCreator("Dieline Studio");
-  return new Blob([await doc.save()], { type: "application/pdf" });
+  return new Blob([(await doc.save()) as Uint8Array<ArrayBuffer>], { type: "application/pdf" });
 }
