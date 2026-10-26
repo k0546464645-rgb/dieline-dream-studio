@@ -8,6 +8,7 @@ import { streamImage } from "@/lib/stream-image";
 import { authHeaders } from "@/lib/studio-client";
 import {
   buildLayeredSvg,
+  buildAiFile,
   dataUrlToFile,
   dielineToPng,
   extractInfo,
@@ -209,6 +210,7 @@ export function Studio({
 
   const [dieline, setDieline] = useState<string>();
   const [dielineName, setDielineName] = useState("");
+  const dielineOriginal = useRef<ArrayBuffer | undefined>(undefined);
   const [art, setArt] = useState<string>();
   const [artFinal, setArtFinal] = useState(false);
   const [artBusy, setArtBusy] = useState(false);
@@ -528,6 +530,7 @@ export function Studio({
     if (!f) return;
     try {
       const png = await dielineToPng(f);
+      dielineOriginal.current = /\.(pdf|ai)$/i.test(f.name) ? await f.arrayBuffer() : undefined;
       setDieline(png);
       void readFile(png);
       void saveFile("dieline", png, f.name);
@@ -553,12 +556,14 @@ export function Studio({
     setArt(undefined);
     setArtFinal(false);
     const form = new FormData();
+    const refs = Object.entries(mockups).filter(([v, src]) => src && mockFinal[v]).slice(0, 3) as [string, string][];
     form.append(
       "prompt",
-      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${mockups["front"] ? " The second image is the approved 3D mockup — match its graphics, colors and typography exactly." : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
+      `The first image is a flat packaging DIELINE (cut and fold template). Fill every panel of this exact dieline with flat, print-ready packaging artwork. Keep the dieline geometry, panel positions, proportions and canvas framing EXACTLY the same — do not move, rotate, crop or redraw the outline. Artwork must be flat (no perspective, no shadows, no 3D), extend slightly past cut lines as bleed, and keep text upright on each panel's correct orientation. Leave the area outside the dieline plain white.${refs.length ? `\n\nCOPY 1:1 — HIGHEST PRIORITY: the following images are the APPROVED design (${refs.map(([v]) => v).join(", ")} views, in that order). Reproduce them ONE-TO-ONE on the matching dieline panels: the same logo, illustrations, layout, colors, typography, text wording and positions. Do NOT invent new graphics, do NOT restyle, do NOT change or translate any text. Only flatten them (remove perspective/lighting) and fit them onto the panels. Use the concept text only for panels not visible in these images.` : ""}\n\nLAYOUT RULE: The FRONT panel carries only the brand, product name and hero graphics. The BACK panel must hold the majority of the text and information (marketing text, usage instructions, warnings, ingredients, scent, expiry, lot no., manufacturer, importer, made in, grade, item number — each info type in its own separate block, Hebrew and English where provided) plus a white barcode box at its bottom. Side panels get secondary info.\n\n${infoPrompt(info)}${styleNotes ? `\n\nREUSE THE EXISTING BRAND STYLE from the uploaded file (logo, fonts, imagery):\n${styleNotes.slice(0, 1200)}` : ""}${extra ? `\n\nCUSTOMER CHANGES TO APPLY (highest priority):\n${extra}` : ""}\n\nCONCEPT:\n${concept.slice(0, 2500)}`,
     );
+    form.append("input_fidelity", "high");
     form.append("image[]", await dataUrlToFile(dl, "dieline.png"));
-    if (mockups["front"] && mockFinal["front"]) form.append("image[]", await dataUrlToFile(mockups["front"], "mockup.png"));
+    for (const [v, src] of refs) form.append("image[]", await dataUrlToFile(src, `mockup-${v}.png`));
     try {
       await streamImage("/api/edit-image", form, (src, fin) => {
         setArt(src);
@@ -632,6 +637,22 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
       download(url, `${dielineName || "dieline"}-artwork.svg`);
       void saveFile("final", new Blob([svg], { type: "image/svg+xml" }), "Layered SVG for Illustrator");
       setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } finally {
+      setSvgBusy(false);
+    }
+  }
+
+  async function exportAi() {
+    if (!art || !dieline) return;
+    setSvgBusy(true);
+    try {
+      const blob = await buildAiFile(art, dieline, dielineOriginal.current);
+      const url = URL.createObjectURL(blob);
+      download(url, `${dielineName || "dieline"}-artwork.ai`);
+      void saveFile("final", blob, "Illustrator file (.ai)");
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (e) {
+      toast.error((e as Error).message);
     } finally {
       setSvgBusy(false);
     }
