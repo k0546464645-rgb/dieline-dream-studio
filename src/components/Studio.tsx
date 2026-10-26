@@ -586,6 +586,7 @@ export function Studio({
 The first image is a flat packaging DIELINE. The other images are the EXISTING, FINAL design (${refs.map(([v]) => v).join(", ")}, in that order). Place this existing design onto the matching dieline panels exactly as it is.
 STRICT RULES:
 - Copy every letter of every text EXACTLY as it appears (Hebrew and English). Do not rewrite, add, remove, translate, shorten or "improve" any text. Do not add new text blocks.
+- NEVER translate or change the language of the design. If the original design is in Hebrew, the output MUST stay in Hebrew. If it mixes Hebrew and English, keep the exact same mix.
 - Keep the same logo, illustrations, colors, fonts, sizes and positions. Do not restyle or invent graphics.
 - Do not rearrange content between panels; front stays on the front panel, back stays on the back panel.
 - Only flatten the views (remove perspective, lighting, shadows) and scale them to fit each panel, with slight bleed.
@@ -1071,7 +1072,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
               </div>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
-              <StepButton n="05" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
+              <StepButton n="05" onClick={() => renderArtwork()} disabled={artBusy || !dieline || (!concept && task !== "direct")}>
                 {artBusy ? "Placing artwork…" : art ? t("st.regen") : t("st.place")}
               </StepButton>
               {art && artFinal && (
