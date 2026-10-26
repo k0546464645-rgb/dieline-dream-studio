@@ -299,6 +299,14 @@ export function Studio({
         if (id) restoredCounts[id] = Math.max(restoredCounts[id] ?? 0, Number(number));
       }
       if (!savedCounts) setPackCounts(restoredCounts);
+      const savedDesigns: string[] = [];
+      for (const file of (data ?? []).filter((d) => d.kind.startsWith("design-direct")).reverse()) {
+        savedDesigns.push(await urlToDataUrl(await signedUrl(file.path)));
+      }
+      if (savedDesigns.length) {
+        setDirectDesigns(savedDesigns);
+        setTask((tk) => tk ?? "direct");
+      }
       if (a) { setArt(await urlToDataUrl(await signedUrl(a.path))); setArtFinal(true); }
       const dm = latest("dieline-master"), am = latest("artwork-master");
       if (dm) { setMasterDieline(await urlToDataUrl(await signedUrl(dm.path))); setMasterDielineName(dm.label || "master carton"); }
@@ -547,9 +555,22 @@ export function Studio({
     }
   }
 
+  async function onDirectDesigns(files: File[]) {
+    if (!files.length) return;
+    setTask("direct");
+    for (const f of files) {
+      const dataUrl = await fileToDataUrl(f);
+      setDirectDesigns((d) => {
+        void saveFile(`design-direct-${d.length}`, dataUrl, f.name);
+        return [...d, dataUrl];
+      });
+    }
+    if (dieline) toast.message(he ? "יש פריסה — אפשר להעביר את העיצוב ישירות בשלב 05" : "Dieline found — transfer directly in step 05");
+  }
+
   async function renderArtwork(extra?: string, dielineOverride?: string) {
     const dl = dielineOverride ?? dieline;
-    if (!dl || !concept) {
+    if (!dl || (!concept && task !== "direct")) {
       toast.error("Upload a dieline and create a concept first");
       return;
     }
