@@ -29,6 +29,7 @@ import { Check, Download, GripVertical, ImagePlus, Loader2, Minus, Plus, Sparkle
 import { usePrefs, type DictKey } from "@/lib/prefs";
 import { PACKAGING_OPTIONS, mockupSlots, mockupKind, savedMockupSlot, type MockupCounts } from "@/lib/mockup-layout";
 import { EditableTitle } from "@/components/EditableTitle";
+import { ManualPlacement } from "@/components/ManualPlacement";
 
 /** Drag-to-reorder wrapper for the step windows; order persists per column in localStorage. */
 function SortableSteps({ group, className, children }: { group: string; className?: string | undefined; children: React.ReactNode }) {
@@ -230,7 +231,8 @@ export function Studio({
   const lastAssistant = [...messages].reverse().find((m) => m.role === "assistant")?.text ?? "";
   const concept = approved || lastAssistant;
   const options = approved ? [] : parseConcepts(lastAssistant);
-  const [task, setTask] = useState<"concept" | "ready" | "guide" | null>(null);
+  const [task, setTask] = useState<"concept" | "ready" | "guide" | "direct" | null>(null);
+  const [directDesigns, setDirectDesigns] = useState<string[]>([]);
   const [guidesList, setGuidesList] = useState<{ id: string; name: string; brand: string }[]>([]);
   const [pendingGuide, setPendingGuide] = useState<string | null>(null);
   const [conceptProjects, setConceptProjects] = useState<{ id: string; name: string; approved_concept: string }[]>([]);
@@ -278,7 +280,7 @@ export function Studio({
         .from("project_files")
         .select("kind,path,label,created_at")
         .eq("project_id", project.id)
-        .or("kind.in.(dieline,artwork,dieline-master,artwork-master),kind.like.mockup%")
+        .or("kind.in.(dieline,artwork,dieline-master,artwork-master),kind.like.mockup%,kind.like.design-direct%")
         .order("created_at", { ascending: false });
       const latest = (k: string) => data?.find((d) => d.kind === k);
       const d = latest("dieline"), m = latest("mockup"), mb = latest("mockup-back"), a = latest("artwork");
@@ -298,6 +300,14 @@ export function Studio({
         if (id) restoredCounts[id] = Math.max(restoredCounts[id] ?? 0, Number(number));
       }
       if (!savedCounts) setPackCounts(restoredCounts);
+      const savedDesigns: string[] = [];
+      for (const file of (data ?? []).filter((d) => d.kind.startsWith("design-direct")).reverse()) {
+        savedDesigns.push(await urlToDataUrl(await signedUrl(file.path)));
+      }
+      if (savedDesigns.length) {
+        setDirectDesigns(savedDesigns);
+        setTask((tk) => tk ?? "direct");
+      }
       if (a) { setArt(await urlToDataUrl(await signedUrl(a.path))); setArtFinal(true); }
       const dm = latest("dieline-master"), am = latest("artwork-master");
       if (dm) { setMasterDieline(await urlToDataUrl(await signedUrl(dm.path))); setMasterDielineName(dm.label || "master carton"); }
@@ -546,9 +556,22 @@ export function Studio({
     }
   }
 
+  async function onDirectDesigns(files: File[]) {
+    if (!files.length) return;
+    setTask("direct");
+    for (const f of files) {
+      const dataUrl = await fileToDataUrl(f);
+      setDirectDesigns((d) => {
+        void saveFile(`design-direct-${d.length}`, dataUrl, f.name);
+        return [...d, dataUrl];
+      });
+    }
+    if (dieline) toast.message(he ? "יש פריסה — אפשר להעביר את העיצוב ישירות בשלב 05" : "Dieline found — transfer directly in step 05");
+  }
+
   async function renderArtwork(extra?: string, dielineOverride?: string) {
     const dl = dielineOverride ?? dieline;
-    if (!dl || !concept) {
+    if (!dl || (!concept && task !== "direct")) {
       toast.error("Upload a dieline and create a concept first");
       return;
     }
@@ -558,11 +581,13 @@ export function Studio({
     const form = new FormData();
     const refs = Object.entries(mockups).filter(([v, src]) => src && mockFinal[v]).slice(0, 3) as [string, string][];
     if (product) refs.unshift(["original uploaded design", product]);
+    if (task === "direct") refs.unshift(...directDesigns.filter(Boolean).slice(0, 4).map((src, i) => [`uploaded designed product ${i + 1}`, src] as [string, string]));
     const transferOnly = refs.length > 0;
     const transferPrompt = `TASK: TRANSFER AN EXISTING DESIGN ONTO A DIELINE — NOT A REDESIGN.
 The first image is a flat packaging DIELINE. The other images are the EXISTING, FINAL design (${refs.map(([v]) => v).join(", ")}, in that order). Place this existing design onto the matching dieline panels exactly as it is.
 STRICT RULES:
 - Copy every letter of every text EXACTLY as it appears (Hebrew and English). Do not rewrite, add, remove, translate, shorten or "improve" any text. Do not add new text blocks.
+- NEVER translate or change the language of the design. If the original design is in Hebrew, the output MUST stay in Hebrew. If it mixes Hebrew and English, keep the exact same mix.
 - Keep the same logo, illustrations, colors, fonts, sizes and positions. Do not restyle or invent graphics.
 - Do not rearrange content between panels; front stays on the front panel, back stays on the back panel.
 - Only flatten the views (remove perspective, lighting, shadows) and scale them to fit each panel, with slight bleed.
@@ -670,6 +695,8 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
     }
   }
 
+  const manualSources = [...directDesigns, ...Object.entries(mockups).filter(([v, src]) => src && mockFinal[v]).map(([, src]) => src as string), ...(product ? [product] : [])];
+
   return (
     <div>
 
@@ -736,6 +763,7 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                       ["concept", t("st.task.concept"), t("st.task.concept.d")],
                       ["ready", t("st.task.ready"), t("st.task.ready.d")],
                       ["guide", t("st.task.guide"), t("st.task.guide.d")],
+                      ["direct", t("st.task.direct"), t("st.task.direct.d")],
                     ] as const
                   ).map(([k, t, d]) => (
                     <button
@@ -819,6 +847,50 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                     {pendingGuide && <p className="font-mono text-xs text-accent">Loading the guide — the chat will open on it in a moment…</p>}
                     {!pendingGuide && project.style_guide_id && (
                       <p className="text-xs text-muted-foreground">Guide attached — the chat will follow it and ask which sub-style to use.</p>
+                    )}
+                  </div>
+                )}
+                {task === "direct" && (
+                  <div className="mt-4 space-y-3">
+                    <label className="block cursor-pointer rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground hover:border-foreground">
+                      {he ? "+ העלאת תמונות של המוצר המעוצב (אפשר כמה זוויות)" : "+ Upload photos of the designed product (several angles allowed)"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          void onDirectDesigns(Array.from(e.target.files ?? []));
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {directDesigns.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {directDesigns.map((src, i) => (
+                          <div key={i} className="relative">
+                            <img src={src} alt="" className="size-20 rounded-md border object-cover" />
+                            <button
+                              type="button"
+                              aria-label={he ? "הסרת תמונה" : "Remove image"}
+                              onClick={() => setDirectDesigns((d) => d.filter((_, j) => j !== i))}
+                              className="absolute -end-1.5 -top-1.5 grid size-5 place-items-center rounded-full border bg-card text-xs"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {directDesigns.length > 0 && (
+                      <StepButton n="01" onClick={() => renderArtwork()} disabled={artBusy || !dieline}>
+                        {artBusy ? (he ? "מעביר לפריסה…" : "Transferring…") : he ? "העברה ישירה לפריסה" : "Transfer directly to dieline"}
+                      </StepButton>
+                    )}
+                    {directDesigns.length > 0 && !dieline && (
+                      <p className="text-xs text-muted-foreground">
+                        {he ? "כדי להעביר, העלה קודם פריסה בשלב 05 — ההעברה תתחיל אוטומטית." : "To transfer, upload a dieline in step 05 first — the transfer starts automatically."}
+                      </p>
                     )}
                   </div>
                 )}
@@ -997,13 +1069,27 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                 onChange={(e) => onDieline(e.target.files?.[0])}
               />
             </label>
+            {dieline && manualSources.length > 0 && (
+              <div className="mt-3">
+                <ManualPlacement
+                  dieline={dieline}
+                  designs={manualSources}
+                  onApply={(png) => {
+                    setArt(png);
+                    setArtFinal(true);
+                    void saveFile("artwork", png, "Artwork (exact placement)");
+                    toast.success(he ? "העיצוב הונח על הפריסה בדיוק כפי שהוא" : "Design placed on the dieline exactly as-is");
+                  }}
+                />
+              </div>
+            )}
             {(art || artBusy) && (
               <div className="mt-3">
                 <ImageSlot src={art} final={artFinal} loading={artBusy} empty="Flat artwork appears here." />
               </div>
             )}
             <div className="mt-4 flex flex-wrap gap-2">
-              <StepButton n="05" onClick={() => renderArtwork()} disabled={artBusy || !dieline || !concept}>
+              <StepButton n="05" onClick={() => renderArtwork()} disabled={artBusy || !dieline || (!concept && task !== "direct")}>
                 {artBusy ? "Placing artwork…" : art ? t("st.regen") : t("st.place")}
               </StepButton>
               {art && artFinal && (

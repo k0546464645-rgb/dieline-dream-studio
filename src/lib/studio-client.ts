@@ -225,6 +225,8 @@ export async function buildAiFile(artwork: string, dieline: string, original?: A
     const bytes = new Uint8Array(await (await fetch(src)).arrayBuffer());
     return src.startsWith("data:image/jpeg") ? doc.embedJpg(bytes) : doc.embedPng(bytes);
   };
+  const art = await embed(artwork);
+  const dl = await embed(dieline);
   let vector: Awaited<ReturnType<typeof doc.embedPdf>>[number] | undefined;
   if (original) {
     try {
@@ -233,13 +235,21 @@ export async function buildAiFile(artwork: string, dieline: string, original?: A
       vector = undefined;
     }
   }
-  const art = await embed(artwork);
-  const w = vector?.width ?? (await imageSize(dieline)).w;
-  const h = vector?.height ?? (await imageSize(dieline)).h;
+  // Page follows the dieline's own proportions so nothing is stretched.
+  const base = vector ?? { width: dl.width, height: dl.height };
+  const w = base.width;
+  const h = base.height;
   const page = doc.addPage([w, h]);
-  page.drawImage(art, { x: 0, y: 0, width: w, height: h });
+  // Contain-fit each layer, centered — never distort the artwork.
+  const fit = (iw: number, ih: number) => {
+    const f = Math.min(w / iw, h / ih);
+    const dw = iw * f;
+    const dh = ih * f;
+    return { x: (w - dw) / 2, y: (h - dh) / 2, width: dw, height: dh };
+  };
+  page.drawImage(art, fit(art.width, art.height));
   if (vector) page.drawPage(vector, { x: 0, y: 0, width: w, height: h, blendMode: BlendMode.Multiply });
-  else page.drawImage(await embed(dieline), { x: 0, y: 0, width: w, height: h, blendMode: BlendMode.Multiply });
+  else page.drawImage(dl, { ...fit(dl.width, dl.height), blendMode: BlendMode.Multiply });
   doc.setTitle("Dieline artwork");
   doc.setCreator("Dieline Studio");
   return new Blob([(await doc.save()) as Uint8Array<ArrayBuffer>], { type: "application/pdf" });
