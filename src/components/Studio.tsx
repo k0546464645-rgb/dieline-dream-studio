@@ -29,6 +29,7 @@ import { Check, Download, GripVertical, ImagePlus, Loader2, Minus, Plus, Sparkle
 import { usePrefs, type DictKey } from "@/lib/prefs";
 import { PACKAGING_OPTIONS, mockupSlots, mockupKind, savedMockupSlot, type MockupCounts } from "@/lib/mockup-layout";
 import { EditableTitle } from "@/components/EditableTitle";
+import { ManualPlacement } from "@/components/ManualPlacement";
 
 /** Drag-to-reorder wrapper for the step windows; order persists per column in localStorage. */
 function SortableSteps({ group, className, children }: { group: string; className?: string | undefined; children: React.ReactNode }) {
@@ -693,6 +694,8 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
       setSvgBusy(false);
     }
   }
+
+  const manualSources = [...directDesigns, ...Object.entries(mockups).filter(([v, src]) => src && mockFinal[v]).map(([, src]) => src as string), ...(product ? [product] : [])];
 
   return (
     <div>
