@@ -216,3 +216,31 @@ export function download(href: string, filename: string) {
   a.click();
   a.remove();
 }
+
+/** Builds a PDF-compatible .ai file: artwork layer below, original vector dieline (if PDF/AI) or dieline image above. */
+export async function buildAiFile(artwork: string, dieline: string, original?: ArrayBuffer) {
+  const { PDFDocument, BlendMode } = await import("pdf-lib");
+  const doc = await PDFDocument.create();
+  const embed = async (src: string) => {
+    const bytes = new Uint8Array(await (await fetch(src)).arrayBuffer());
+    return src.startsWith("data:image/jpeg") ? doc.embedJpg(bytes) : doc.embedPng(bytes);
+  };
+  let vector: Awaited<ReturnType<typeof doc.embedPdf>>[number] | undefined;
+  if (original) {
+    try {
+      [vector] = await doc.embedPdf(original, [0]);
+    } catch {
+      vector = undefined;
+    }
+  }
+  const art = await embed(artwork);
+  const w = vector?.width ?? (await imageSize(dieline)).w;
+  const h = vector?.height ?? (await imageSize(dieline)).h;
+  const page = doc.addPage([w, h]);
+  page.drawImage(art, { x: 0, y: 0, width: w, height: h });
+  if (vector) page.drawPage(vector, { x: 0, y: 0, width: w, height: h, blendMode: BlendMode.Multiply });
+  else page.drawImage(await embed(dieline), { x: 0, y: 0, width: w, height: h, blendMode: BlendMode.Multiply });
+  doc.setTitle("Dieline artwork");
+  doc.setCreator("Dieline Studio");
+  return new Blob([await doc.save()], { type: "application/pdf" });
+}
