@@ -17,6 +17,7 @@
 - [ ] More automation in the same spirit (user: "ועוד דברים בכיוון הזה")
 - [x] Task choice after product upload (create concept / design from approved concept)
 - [ ] Task choice: direct design-to-dieline transfer — upload a photo of the designed product, transfer it onto the dieline directly (no concept/mockup stages)
+- [ ] Artwork fidelity: AI transfer redesigns/translates graphics (Hebrew→English) — strengthen transfer prompt and add exact no-AI manual placement mode (drag/scale design onto dieline, export)
 - [x] Design board window to view concepts/design and choose direction
 - [x] Read uploaded dieline/artwork file to auto-fill info and extract style
 - [x] Cloud backend + sign-in for 2 studio users
