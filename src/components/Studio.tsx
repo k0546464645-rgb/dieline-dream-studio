@@ -846,6 +846,50 @@ LAYOUT RULE: master carton artwork is industrial and clear — main panels carry
                     )}
                   </div>
                 )}
+                {task === "direct" && (
+                  <div className="mt-4 space-y-3">
+                    <label className="block cursor-pointer rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground hover:border-foreground">
+                      {he ? "+ העלאת תמונות של המוצר המעוצב (אפשר כמה זוויות)" : "+ Upload photos of the designed product (several angles allowed)"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          void onDirectDesigns(Array.from(e.target.files ?? []));
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                    {directDesigns.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {directDesigns.map((src, i) => (
+                          <div key={i} className="relative">
+                            <img src={src} alt="" className="size-20 rounded-md border object-cover" />
+                            <button
+                              type="button"
+                              aria-label={he ? "הסרת תמונה" : "Remove image"}
+                              onClick={() => setDirectDesigns((d) => d.filter((_, j) => j !== i))}
+                              className="absolute -end-1.5 -top-1.5 grid size-5 place-items-center rounded-full border bg-card text-xs"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {directDesigns.length > 0 && (
+                      <StepButton n="01" onClick={() => renderArtwork()} disabled={artBusy || !dieline}>
+                        {artBusy ? (he ? "מעביר לפריסה…" : "Transferring…") : he ? "העברה ישירה לפריסה" : "Transfer directly to dieline"}
+                      </StepButton>
+                    )}
+                    {directDesigns.length > 0 && !dieline && (
+                      <p className="text-xs text-muted-foreground">
+                        {he ? "כדי להעביר, העלה קודם פריסה בשלב 05 — ההעברה תתחיל אוטומטית." : "To transfer, upload a dieline in step 05 first — the transfer starts automatically."}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </Step>
